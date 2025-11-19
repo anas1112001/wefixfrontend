@@ -1,17 +1,18 @@
 import { FC, useRef } from 'react'
 
 import Container from 'components/Atoms/Container/Container'
+
+import Footer from 'components/Organisms/Footer/Footer'
 import Header from 'components/Organisms/Header/Header'
+import Hero from 'components/Organisms/Hero/Hero'
+import { AppProvider } from 'hooks/useContext'
+import { useLoadData } from 'hooks/useLoadData'
+import { useScrollTo } from 'hooks/useScrollTo'
+import { useSelection } from 'hooks/useSelection'
 
 import 'styles/App.css'
-import { useLoadData } from 'hooks/useLoadData'
-import { useSelection } from 'hooks/useSelection'
-import { useScrollTo } from 'hooks/useScrollTo'
-import { AppProvider } from 'hooks/useContext'
-import Hero from 'components/Organisms/Hero/Hero'
-import Footer from 'components/Organisms/Footer/Footer'
 
-const App: FC = () => {
+const HomeApp: FC = () => {
   const { data } = useLoadData()
   const {
     handleCardClick,
@@ -39,8 +40,7 @@ const App: FC = () => {
     selectedCards,
   }
 
-  const techAreaRef = useRef(null); 
-
+  const techAreaRef = useRef(null)
 
   return (
     <AppProvider appContext={context}>
@@ -52,5 +52,7 @@ const App: FC = () => {
     </AppProvider>
   )
 }
+
+const App: FC = () => <HomeApp />
 
 export default App

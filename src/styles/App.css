@@ -57,7 +57,17 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+body {
   background: var(--background);
+  color: #111;
+  font-family: 'Google Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+}
+
+body.login-view {
+  background: linear-gradient(135deg, #5e60ff 0%, #864cf7 50%, #f49b33 100%);
 }
 
 .appContainer {
@@ -143,4 +153,189 @@
 
 .button:hover {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.loginPage {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 32px 16px;
+  width: 100%;
+  background: linear-gradient(135deg, #5e60ff 0%, #864cf7 50%, #f49b33 100%);
+}
+
+.loginCard {
+  background: #ffffff;
+  border-radius: 32px;
+  box-shadow: 0 30px 80px rgba(35, 11, 61, 0.25);
+  max-width: 420px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.loginCardHeader {
+  background: linear-gradient(180deg, #ff9b1a 0%, #ff7a18 100%);
+  padding: 32px 28px 40px;
+  text-align: center;
+}
+
+.loginIcon {
+  display: block;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.loginTitle {
+  background: transparent;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.loginSubtitle {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  margin-top: 6px;
+}
+
+.loginForm {
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px;
+}
+
+.loginField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.loginField .label {
+  background: transparent;
+  color: #4a4a4a;
+  font-weight: 600;
+}
+
+.passwordField {
+  position: relative;
+}
+
+.passwordField input {
+  padding-right: 80px;
+}
+
+.passwordToggle {
+  background: transparent;
+  border: none;
+  color: #ff8a1f;
+  cursor: pointer;
+  font-weight: 600;
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.passwordToggle:hover {
+  color: #ff6a00;
+}
+
+.loginMeta {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 28px;
+}
+
+.loginLink {
+  color: #ff8a1f;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.loginLink:hover {
+  text-decoration: underline;
+}
+
+.loginButton {
+  background: linear-gradient(135deg, #ffa51c, #ff7a18);
+  border: none;
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 8px 28px 0;
+  padding: 14px 20px;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  width: calc(100% - 56px);
+}
+
+.loginButton:hover {
+  box-shadow: 0 15px 30px rgba(255, 138, 31, 0.35);
+  transform: translateY(-2px);
+}
+
+.loginDemo {
+  background: #f7f9ff;
+  border: 1px solid rgba(86, 108, 214, 0.2);
+  border-radius: 24px;
+  margin: 0 24px 28px;
+  padding: 20px 24px;
+}
+
+.loginDemoTitle {
+  background: transparent;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.loginDemo ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.loginDemo li {
+  line-height: 1.4;
+}
+
+.loginError,
+.loginSuccess {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: -4px 28px 0;
+}
+
+.loginError {
+  color: #d63649;
+}
+
+.loginSuccess {
+  color: #0c8d4d;
+}
+
+@media (min-width: 768px) {
+  .loginCard {
+    max-width: 460px;
+  }
+
+  .loginForm {
+    padding: 36px;
+  }
+
+  .loginButton {
+    margin: 8px 36px 0;
+    width: calc(100% - 72px);
+  }
+
+  .loginDemo {
+    margin: 0 32px 32px;
+  }
 }

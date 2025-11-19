@@ -1,7 +1,28 @@
-import React from 'react';
+import { ChangeEventHandler, FC } from 'react';
+
 import styles from './InputField.module.css';
 
-const InputField = ({ name, onChange, pattern, placeholder, required=false, title, type, value, }) => (
+type InputFieldProps = {
+  name: string;
+  onChange: ChangeEventHandler<HTMLInputElement>;
+  pattern?: string;
+  placeholder?: string;
+  required?: boolean;
+  title?: string;
+  type: string;
+  value?: string | number | readonly string[];
+};
+
+const InputField: FC<InputFieldProps> = ({
+  name,
+  onChange,
+  pattern,
+  placeholder,
+  required = false,
+  title,
+  type,
+  value,
+}) => (
   <input
     className={styles.inputField}
     name={name}

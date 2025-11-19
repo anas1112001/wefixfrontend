@@ -35,7 +35,7 @@ export const appText = {
   },
   links: [
     '',
-    'about-us',
+    'login',
     'contact-us',
   ],
   logo: { alt: 'logo' },
