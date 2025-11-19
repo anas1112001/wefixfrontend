@@ -1,0 +1,56 @@
+[
+  {
+    "id": "0",
+    "name": "Mochaticho Late",
+    "description": "Coffee is a brewed drink prepared from roasted coffee beans, the seeds of berries from certain Coffea species.",
+    "imageUrl": "images/items/0.png"
+  },
+  {
+    "id": "1",
+    "name": "Iced Coffee",
+    "description": "Coffee is a brewed drink prepared from roasted coffee beans, the seeds of berries from certain Coffea species.",
+    "imageUrl": "images/items/1.png"
+  },
+  {
+    "id": "2",
+    "name": "Caramel Frappe",
+    "description": "Coffee is a brewed drink prepared from roasted coffee beans, the seeds of berries from certain Coffea species.",
+    "imageUrl": "images/items/2.png"
+  },
+  {
+    "id": "3",
+    "name": "Mocha Late",
+    "description": "Coffee is a brewed drink prepared from roasted coffee beans, the seeds of berries from certain Coffea species.",
+    "imageUrl": "images/items/1.png"
+  },
+  {
+    "id": "4",
+    "name": "Halapino Coffee",
+    "description": "Coffee is a brewed drink prepared from roasted coffee beans, the seeds of berries from certain Coffea species.",
+    "imageUrl": "images/items/2.png"
+  },
+  {
+    "id": "5",
+    "name": "Caramel Frappe",
+    "description": "Coffee is a brewed drink prepared from roasted coffee beans, the seeds of berries from certain Coffea species.",
+    "imageUrl": "images/items/3.png"
+  },
+  {
+    "id": "6",
+    "name": "Mocha Late",
+    "description": "Coffee is a brewed drink prepared from roasted coffee beans, the seeds of berries from certain Coffea species.",
+    "imageUrl": "images/items/2.png"
+  },
+  {
+    "id": "7",
+    "name": "Mocha Late",
+    "description": "Coffee is a brewed drink prepared from roasted coffee beans, the seeds of berries from certain Coffea species.",
+    "imageUrl": "images/items/3.png"
+  },
+  {
+    "id": "8",
+    "name": "Mocha Late",
+    "description": "Coffee is a brewed drink prepared from roasted coffee beans, the seeds of berries from certain Coffea species.",
+    "imageUrl": "images/items/4.png"
+  }
+]

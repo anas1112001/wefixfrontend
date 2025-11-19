@@ -1,0 +1,77 @@
+.burgerWrapper {
+  display: flex;
+  flex-direction: column;
+  margin: 25px;
+  align-items: flex-end;
+  width: 90vw;
+}
+
+.name {
+  color: var(--white);
+}
+
+.menuWrapper {
+  color: var(--gray);
+  display: flex;
+  font-size: 1.3rem;
+  font-weight: bold;
+  height: 40px;
+  justify-content: center;
+}
+
+.barsWrapper {
+  display: flex;
+  flex-direction: column;
+  height: 30px;
+}
+
+.burgerList {
+  font-size: 1.5rem;
+  list-style: none;
+  margin-right: 50px;
+  margin-top: 20px;
+  width: 250px;
+}
+
+.burgerList li {
+  background: var(--grad);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  padding: 10px;
+  text-align: center;
+  width: 100%;
+}
+
+.burgerList li a {
+  color: var(--black);
+  font-size: 1.2rem;
+  text-decoration: none;
+}
+
+.bar1,
+.bar2,
+.bar3 {
+  background-color: var(--white);
+  height: 5px;
+  margin: 3px 20px;
+  transition: 1.4s;
+  width: 55px;
+}
+
+.change {
+  height: 30px;
+  padding-top: 5px;
+}
+
+.change .bar1 {
+  transform: rotate(-45deg) scale(0.8);
+}
+
+.change .bar2 {
+  opacity: 0;
+}
+
+.change .bar3 {
+  transform: rotate(-45deg) scale(0.8);
+}
+

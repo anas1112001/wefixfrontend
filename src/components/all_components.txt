@@ -1,0 +1,366 @@
+.link {
+    color: #ffffff; /* Default color for links */
+    text-decoration: none; /* Removes underline */
+    padding: 8px; /* Adds padding for clickability */
+    transition: color 0.3s ease; /* Smooth transition for hover effect */
+  }
+  
+  .link:hover {
+    color: #00BFFF; /* Highlight color on hover */
+  }
+  import React from 'react';
+import styles from './Link.module.css';
+
+type LinkProps = {
+    children: React.ReactNode;
+    className?: string;
+    href: string;
+};
+
+const Link: React.FC<LinkProps> = ({ children, className = '', href, }) => (
+    <a href={href} className={`${styles.link} ${className}`}>
+        {children}
+    </a>
+);
+
+export default Link;
+import React, { FC, FormEventHandler } from 'react';
+
+interface FormProps {
+  children: React.ReactNode;
+  className?: string;
+  onSubmit: FormEventHandler<HTMLFormElement>;
+}
+
+const Form: FC<FormProps> = ({ children, className, onSubmit }) => (
+  <form className={className} onSubmit={onSubmit}>
+    {children}
+  </form>
+);
+
+export default Form;
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+interface NavItemProps {
+  label: string;
+  link: string;
+}
+
+const NavItem: React.FC<NavItemProps> = ({ label, link }) => (
+  <li data-testid="listitem">
+    <Link to={link}>{label}</Link>
+  </li>
+);
+
+export default NavItem;
+import React from 'react';
+import styles from './Textarea.module.css';
+
+const Textarea = ({ name, onChange, placeholder, value, }) => (
+  <textarea
+    className={styles.textarea}
+    name={name}
+    value={value}
+    placeholder={placeholder}
+    onChange={onChange}
+  />
+);
+
+export default Textarea;
+.textarea {
+    width: 100%;
+    height: 80px;
+    resize: none;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease-in-out;
+    background-color: var(--white);
+  }
+  
+  .textarea:focus {
+    outline: none;
+    border-color: #3671e9;
+  }
+  
+  /* Responsive adjustments */
+  @media (min-width: 768px) {
+    .textarea {
+      height: 120px;
+      font-size: 1.1rem;
+      padding: 10px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .textarea {
+      height: 150px;
+      font-size: 1.2rem;
+      padding: 12px;
+    }
+  }
+  import React from 'react';
+
+type ButtonProps = {
+  children: React.ReactNode;
+  className?: string;
+  onClick: () => void;
+  type?: 'button' | 'submit' | 'reset'; 
+};
+
+const Button = ({ children,className = '' , onClick, type = 'button',  }: ButtonProps) => (
+  <button type={type} onClick={onClick} className={`btn ${className}`}>
+    {children}
+  </button>
+);
+
+export default Button;
+.inputField {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease-in-out;
+    background-color: var(--white);
+  }
+  
+  .inputField:focus {
+    outline: none;
+    border-color: #3671e9;
+  }
+  
+  /* Responsive adjustments */
+  @media (min-width: 768px) {
+    .inputField {
+      font-size: 1.1rem;
+      padding: 10px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .inputField {
+      font-size: 1.2rem;
+      padding: 12px;
+    }
+  }
+  import React from 'react';
+import styles from './InputField.module.css';
+
+const InputField = ({ name, onChange, pattern, placeholder, required=false, title, type, value, }) => (
+  <input
+    className={styles.inputField}
+    name={name}
+    onChange={onChange}
+    pattern={pattern}
+    placeholder={placeholder}
+    required={required}
+    title={title}
+    type={type}
+    value={value}
+  />
+);
+
+export default InputField;
+import React from 'react';
+
+const Mailto = ({ body = "", children, email, subject = "" }) => {
+    let params = [];
+  
+    if (subject) {
+        params.push(`subject=${encodeURIComponent(subject)}`);
+    }
+  
+    if (body) {
+        params.push(`body=${encodeURIComponent(body)}`);
+    }
+
+    const paramString = params.length > 0 ? `?${params.join('&')}` : "";
+
+    return <a href={`mailto:${email}${paramString}`}>{children}</a>;
+};
+
+export default Mailto;
+import { ReactNode, forwardRef } from 'react';
+
+interface IContainerProps {
+  children: ReactNode | ReactNode[];
+  className?: string;
+  id?: string | number;
+  onClick?: any;
+  testId?: string;
+}
+
+const Container = forwardRef<HTMLDivElement, IContainerProps>(({
+  children,
+  className,
+  id,
+  onClick,
+  testId
+}, ref) => (
+  <div
+    className={className}
+    data-testid={testId}
+    id={`${id}`}
+    onClick={onClick}
+    ref={ref}  // Apply ref to the div
+  >
+    {children}
+  </div>
+));
+
+export default Container;
+import { render, screen } from '@testing-library/react'
+
+import Container from './Container'
+
+const { getByTestId, getByText } = screen
+
+const mockText = 'AA'
+
+const containerElements = {
+  children: () => getByText(mockText),
+  container: () => getByTestId('contaienr'),
+}
+
+describe('Container', () => {
+  describe('When Container is rendered with children', () => {
+    it('should be in the document', () => {
+      render(
+        <Container className="ItemContainer" testId="contaienr">
+          <span>{mockText}</span>
+        </Container>
+      )
+
+      expect(containerElements.container()).toBeInTheDocument()
+      expect(containerElements.children()).toBeInTheDocument()
+    })
+  })
+})
+import React, { FC } from 'react';
+
+interface HeadingProps {
+  children: React.ReactNode;
+  className?: string;
+  level: '1' | '2' | '3' | '4' | '5' | '6';
+  onClick?: any; 
+}
+
+const Heading: FC<HeadingProps> = ({ children, className, level, onClick }) => {
+  const Tag = `h${level}` as keyof JSX.IntrinsicElements;
+  
+  return <Tag className={className} onClick={onClick}>{children}</Tag>;
+};
+
+export default Heading;
+import React, { FC } from 'react';
+
+interface ImageProps {
+    alt: string;
+    className?: string;
+    onClick?: () => void; 
+    src: string;
+}
+
+const Image: FC<ImageProps> = ({ alt, className, onClick , src,  }) => (
+    <img
+        src={src}
+        alt={alt}
+        className={className}
+        onClick={onClick} 
+    />
+);
+
+export default Image;
+import React, { FC } from 'react';
+
+interface ParagraphProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+const Paragraph: FC<ParagraphProps> = ({ children, className }) => (
+  <p className={className}>{children}</p>
+);
+
+export default Paragraph;
+import React from 'react';
+import styles from 'components/Molecules/Navbar/Navbar.module.css';
+
+interface NavListProps {
+  children: React.ReactNode;
+  isInFooter: boolean;
+}
+
+const NavList: React.FC<NavListProps> = ({ children, isInFooter }) => (
+  <ul className={isInFooter ? styles.navbarList : styles.nonFooterNavbarList} data-testid="navbarList">
+    {children}
+  </ul>
+);
+
+export default NavList;
+import React, { FC } from 'react';
+
+interface HeadingProps {
+  children: React.ReactNode;
+  className?: string;
+  level?: '1' | '2' | '3' | '4' | '5' | '6'; // Allows flexibility for different heading levels
+}
+
+const Heading: FC<HeadingProps> = ({ children, className, level='2', }) => {
+  const Tag = `h${level}` as keyof JSX.IntrinsicElements;
+  
+  return <Tag className={className}>{children}</Tag>;
+};
+
+export default Heading;
+.label {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    display: block;
+    color: #333;
+    background-color: var(--wildsand);
+  }
+  
+  /* Responsive adjustments */
+  @media (min-width: 768px) {
+    .label {
+      font-size: 1rem;
+      background-color: var(--wildsand);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .label {
+      font-size: 1.1rem;
+      background-color: var(--wildsand);
+    }
+  }
+  import React from 'react';
+import styles from './Label.module.css';
+
+const Label = ({ children }) => (
+  <label className={styles.label}>{children}</label>
+);
+
+export default Label;
+// Title component for different heading levels
+import React from 'react';
+
+interface TitleProps {
+  children: React.ReactNode;
+  className?: string;
+  level: '1' | '2' | '3' | '4' | '5' | '6';
+}
+
+const Title: React.FC<TitleProps> = ({ children, className, level }) => {
+  const Tag = `h${level}` as keyof JSX.IntrinsicElements;
+  
+  return <Tag className={className}>{children}</Tag>;
+
+};
+
+export default Title;

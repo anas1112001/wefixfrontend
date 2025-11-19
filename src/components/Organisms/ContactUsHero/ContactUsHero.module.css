@@ -1,0 +1,47 @@
+.contactUsHeroWrapper {
+  display: flex;
+  flex-direction: column;
+  grid-area: contactUsHeroWrapper;
+}
+
+.left {
+  display: flex;
+  justify-content: center;
+  grid-area: left;
+  padding: 1rem;
+}
+
+
+.right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  grid-area: right;
+  padding: 1rem;
+}
+
+/* Adjustments for tablets */
+@media (min-width: 768px) {
+  .contactUsHeroWrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    grid-template-areas:
+      "left right"
+    ;
+  }
+
+
+  .left {
+    align-items: center;
+    justify-content: center;
+    max-width: 50vw;
+    height: 100%;
+  }
+
+}
+
+/* Further adjustments for large desktops */
+@media (min-width: 1024px) {
+
+}

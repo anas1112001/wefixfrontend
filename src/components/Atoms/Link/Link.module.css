@@ -1,0 +1,11 @@
+.link {
+    color: #ffffff; /* Default color for links */
+    text-decoration: none; /* Removes underline */
+    padding: 8px; /* Adds padding for clickability */
+    transition: color 0.3s ease; /* Smooth transition for hover effect */
+  }
+  
+  .link:hover {
+    color: #00BFFF; /* Highlight color on hover */
+  }
+  

@@ -1,0 +1,23 @@
+.label {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    display: block;
+    color: #333;
+    background-color: var(--wildsand);
+  }
+  
+  /* Responsive adjustments */
+  @media (min-width: 768px) {
+    .label {
+      font-size: 1rem;
+      background-color: var(--wildsand);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .label {
+      font-size: 1.1rem;
+      background-color: var(--wildsand);
+    }
+  }
+  

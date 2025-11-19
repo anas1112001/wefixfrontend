@@ -1,0 +1,31 @@
+.inputField {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease-in-out;
+    background-color: var(--white);
+  }
+  
+  .inputField:focus {
+    outline: none;
+    border-color: #3671e9;
+  }
+  
+  /* Responsive adjustments */
+  @media (min-width: 768px) {
+    .inputField {
+      font-size: 1.1rem;
+      padding: 10px;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .inputField {
+      font-size: 1.2rem;
+      padding: 12px;
+    }
+  }
+  

@@ -1,0 +1,32 @@
+.ViewMoreWrapper {
+  align-items: center;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  flex-direction: column;
+  height: 145px;
+  margin: 3vh;
+  width: 185px;
+}
+
+.ViewMoreWrapper :hover {
+  cursor: pointer;
+}
+
+.ViewMoreImage {
+  height: 100px;
+}
+
+.ViewMoreLink {
+  color: var(--merlin);
+  font-family: GoogleSans-Medium;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+@media (max-width: 1400px) {
+  .ViewMoreWrapper {
+    align-self: center;
+  }
+}

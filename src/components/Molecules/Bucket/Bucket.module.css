@@ -1,0 +1,56 @@
+.bucketWrapper:hover {
+  cursor: pointer;
+}
+
+.shoppingIcon {
+  height: 18px;
+  margin-right: 50px;
+  margin-bottom: 10px;
+}
+
+.profileIcon {
+  height: 50px;
+}
+
+@media (max-width: 1400px) {
+  .bucketWrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 5px;
+    width: 100%;
+  }
+
+  .wrappedProfile,
+  .wrappedLogo {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    margin-right: 3vw;
+    width: 20%;
+  }
+
+  .mobileLogoIcon {
+    height: 35px;
+  }
+
+  .shoppingIcon {
+    margin-top: 15px;
+    height: 20px;
+  }
+
+  .profileIcon {
+    height: 50px;
+  }
+}
+
+@keyframes slideUpWithFade {
+  0% {
+    opacity: 0.1;
+    transform: translateY(15px);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

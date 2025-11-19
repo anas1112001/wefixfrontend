@@ -1,0 +1,17 @@
+.logoWrapper {
+  align-items: center;
+  display: flex;
+  height: 100%;
+  padding: 0 10px;
+  width: 20vh;
+}
+
+.headerLogo {
+  height: 125px;
+}
+
+@media (max-width: 1400px) {
+  .headerLogo {
+    margin-left: 5px;
+  }
+}

@@ -1,0 +1,41 @@
+.selectionWrapper {
+  align-items: center;
+  animation: slideUpWithFade 0.5s;
+  display: flex;
+  height: 50px;
+  justify-content: flex-start;
+  padding: 5px;
+}
+
+.itemLogo {
+  height: 40px;
+}
+
+.itemName {
+  font-family: 'GoogleSans-Medium';
+  font-size: 0.9rem;
+  text-indent: 5px;
+  margin-left: 10px;
+}
+
+@media (max-width: 1400px) {
+  .selectionWrapper {
+    height: 80px;
+  }
+
+  .itemName {
+    text-indent: 0;
+    text-align: center;
+  }
+}
+
+@keyframes slideUpWithFade {
+  0% {
+    opacity: 0.1;
+    transform: translateY(15px);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

@@ -1,0 +1,146 @@
+:root {
+  --action-cart-border: 1px solid #e44c4c;
+  --anakiwaapprox: #97e8fe;
+  --robinEggBlue : #05DCBD;
+  --burntSienna: #eb5757;
+  --wildsand : #F5F5F5;
+  --black: #000000;
+  --card-shadow: 2px 10px 40px rgba(45, 65, 102, 0.1);
+  --cart-shadow: 0 25px 40px #1687d933;
+  --gray: #828282;
+  --mandy: #e44c4c;
+  --red: #ff0000;
+  --blue: #03c0ff;
+  --merlin: #3f3631;
+  --outerSpace: #2f3841;
+  --paleOyster: #9c8e76;
+  --wheat: #f5d5bc;
+  --white: #ffffff;
+  --background: #9c8e76;
+  --grad: radial-gradient(
+      farthest-side at top right,
+      var(--wheat),
+      transparent 200px
+    ),
+    radial-gradient(
+      farthest-corner at top left,
+      var(--anakiwaapprox),
+      transparent 200px
+    ),
+    linear-gradient(transparent, var(--anakiwaapprox));
+  --red-grad: radial-gradient(
+      farthest-side at top right,
+      var(--red),
+      transparent 200px
+    ),
+    radial-gradient(
+      farthest-corner at top left,
+      var(--white),
+      transparent 200px
+    ),
+    linear-gradient(transparent, var(--white));
+
+  --blue-grad: radial-gradient(
+      farthest-side at bottom left,
+      var(--blue),
+      transparent 350px
+    ),
+    radial-gradient(
+      farthest-corner at top left,
+      var(--white),
+      transparent 200px
+    ),
+    linear-gradient(transparent, var(--white));
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background: var(--background);
+}
+
+.appContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  justify-content: center; 
+  min-height: 100vh; 
+}
+
+.whatsapp-float {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  bottom: 30px;
+  right: 30px;
+  background-color: transparent;
+  color: #FFFFFF;
+  border-radius: 50px;
+  text-align: center;
+  font-size: 30px;
+  box-shadow: 2px 2px 3px #999;
+  z-index: 1000; /* High z-index to ensure visibility on top of other elements */
+}
+
+.whatsapp-image{
+  width: 80px;
+    background-color: transparent;
+}
+
+.whatsapp-float i {
+  margin-top: 16px; /* Adjusts icon position within the circle */
+}
+
+
+/* Adaptation for tablets and desktops */
+@media (min-width: 768px) {
+  .appContainer {
+    padding: 32px; 
+    gap: 20px;
+  }
+}
+
+/* Additional styles for large desktops */
+@media (min-width: 1024px) {
+  .appContainer {
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+  }
+}
+
+/* Animation and keyframes for interaction */
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slideInLeft {
+  animation: slideInLeft 0.5s forwards;
+}
+
+.slideInRight {
+  animation: slideInRight 0.5s forwards;
+}
+
+.button:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}

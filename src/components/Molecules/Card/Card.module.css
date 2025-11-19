@@ -1,0 +1,217 @@
+/* Base mobile styles for the card */
+.cardWrapper {
+  align-items: center;
+  border-radius: 2rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1rem;
+  transition: transform 0.3s ease-in-out;
+}
+
+.cardWrapper:hover {
+  background-color: var(--background);
+  transform: scale(1.05);
+}
+
+.cardImage {
+  max-width: 50vw;
+  border-radius: 1rem;
+}
+
+.cardContent {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cardTitle {
+  color: var(--white);
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin: 1rem;
+  text-align: center;
+}
+
+.cardDescription {
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 100;
+  max-width: 100%;
+  text-align: center;
+}
+
+.cardButton {
+  align-self: center;
+  background-color: #3671e9;
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 1rem;
+  padding: 0.8rem 1.5rem;
+  transition: all 0.3s;
+}
+
+/* Adjustments for tablets and larger devices */
+@media (min-width: 768px) {
+  .cardWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: auto;
+  }
+
+  .cardImage {
+    width: 150px;
+    border-radius: 1rem;
+  }
+
+  .cardContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 30vh;
+  }
+
+  .cardTitle {
+    min-height: 8vh;
+    font-size: 1.35rem;
+  }
+
+  .cardDescription {
+    font-size: 1.35rem;
+    font-weight: 100;
+  }
+
+  .cardButton {
+    padding: 0.6rem;
+    font-size: 1.5rem;
+    height: 100px;
+    width: 180px;
+  }
+}
+
+/* Further adjustments for large desktops */
+@media (min-width: 1024px) {
+  .cardImage {
+    width: 150px;
+    border-radius: 1rem;
+  }
+
+  .cardContent {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 30vw;
+  }
+
+  .cardTitle {
+    min-height: 8vw;
+    font-size: 1.35rem;
+  }
+
+  .cardDescription {
+    font-size: 1.35rem;
+    font-weight: 100;
+  }
+
+  .cardButton {
+    padding: 0.6rem;
+    font-size: 1.5rem;
+    height: 100px;
+    width: 180px;
+  }
+}
+
+/* Further adjustments for large desktops */
+@media (min-width: 1400px) {
+  .cardWrapper {
+    align-items: center;
+    border-radius: 2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1rem;
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .cardImage {
+    width: 10vw;
+    border-radius: 1rem;
+  }
+
+  .cardContent {
+    display: flex;
+    flex-direction: column;
+    min-height: 10vw;
+  }
+
+  .cardTitle {
+    min-height: 6vh;
+    font-size: 1.35rem;
+    font-weight: bold;
+  }
+
+  .cardDescription {
+    font-size: 1rem;
+    font-weight: lighter;
+  }
+
+  .cardButton {
+    padding: 0.6rem;
+    font-size: 1.5rem;
+    height: 100px;
+    width: 180px;
+  }
+}
+
+@media (min-width: 2500px) {
+  .cardImage {
+    width: 20vw;
+    border-radius: 1rem;
+    max-width: 300px; /* Capping the maximum width */
+    min-width: 250px; /* Setting a minimum width */
+  }
+
+  .cardContent {
+    display: flex;
+    flex-direction: column;
+    min-height: 10vw;
+  }
+
+  .cardTitle {
+    min-height: 5vw;
+    font-size: 2.5rem;
+    font-weight: bold;
+  }
+
+  .cardDescription {
+    font-size: 2rem;
+    font-weight: 400;
+  }
+
+  .cardButton {
+    margin: 2rem;
+    font-size: 2rem;
+    height: 150px;
+    width: 300px;
+  }
+}
+
+@keyframes slideUpWithFade {
+  0% {
+    opacity: 0.1;
+    transform: translateY(25px);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

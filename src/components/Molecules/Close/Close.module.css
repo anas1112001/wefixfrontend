@@ -1,0 +1,20 @@
+.closeWrapper {
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+}
+
+.closeWrapper :hover {
+  cursor: pointer;
+}
+
+.closeImage {
+  height: 35px;
+}
+
+@media (max-width: 1400px) {
+  .closeWrapper {
+    align-self: center;
+  }
+}

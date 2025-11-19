@@ -1,0 +1,35 @@
+.addProductWrapper {
+  animation: slideUpWithFade 1.5s;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: var(--card-shadow);
+  display: flex;
+  padding: 10px;
+  position: absolute;
+  width: fit-content;
+}
+
+.addProductWrapper:hover {
+  cursor: pointer;
+}
+
+.addProductImage {
+  height: 40px;
+}
+
+.addProductTitle {
+  font-size: 1rem;
+  padding-top: 10px;
+  margin-left: 10px;
+}
+
+@keyframes slideUpWithFade {
+  0% {
+    opacity: 0.1;
+    transform: translateY(25px);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

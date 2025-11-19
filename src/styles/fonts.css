@@ -1,0 +1,27 @@
+@font-face {
+  font-family: 'GoogleSans-Regular';
+  src: local('GoogleSans-Regular'),
+    url('../../public/fonts/GoogleSans-Regular.otf') format('opentype');
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'GoogleSans-Bold';
+  src: local('GoogleSans-Bold'),
+    url('../../public/fonts/GoogleSans-Bold.otf') format('opentype');
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'GoogleSans-Medium';
+  src: local('GoogleSans-Medium'),
+    url('../../public/fonts/GoogleSans-Medium.otf') format('opentype');
+  font-weight: normal;
+}
+
+@font-face {
+  font-family: 'GoogleSans-Italic';
+  src: local('GoogleSans-Italic'),
+    url('../../public/fonts/GoogleSans-Italic.otf') format('opentype');
+  font-weight: normal;
+}

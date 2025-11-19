@@ -1,0 +1,110 @@
+/* Base mobile styles */
+.areaWrapper {
+  background-color: var(--outerSpace);
+  border-radius: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  width: 100vw;
+  margin-bottom: 10px;
+}
+
+.cardsWrapper {
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 6px rgba(46, 27, 27, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 2rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background-color: transparent;
+}
+
+.title {
+  backdrop-filter: blur(5px);
+  color: var(--white);
+  font-size: 1.5rem;
+  margin: 3rem auto;
+  padding: 2rem;
+  text-align: center;
+  border-radius: 1rem;
+}
+
+.description {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--white);
+  text-align: center;
+  border-radius: 10px;
+  padding: 3rem;
+}
+
+/* Adjustments for tablets and larger devices */
+@media (min-width: 768px) {
+  .areaWrapper {
+    width: 90vw;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .description {
+    font-size: 1.4rem;
+  }
+}
+
+/* Further adjustments for large desktops */
+@media (min-width: 1024px) {
+  .areaWrapper {
+    background-color: var(--outerSpace);
+    border-radius: 12px;
+    margin: 5rem;
+  }
+
+  .cardsWrapper {
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(46, 27, 27, 0.1);
+    backdrop-filter: blur(10px);
+    width: 50%;
+    margin: 2rem;
+  }
+
+  .title {
+    font-size: 3rem;
+    background-color: var(--portGore);
+  }
+}
+
+
+@media (min-width: 1024px) {
+  .title {
+    font-size: 3rem;
+  }
+
+  .description {
+    font-size: 2rem;
+  }
+}
+
+.hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.fadeIn {
+  animation: fadeIn 1s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,27 @@
+
+.headerWrapper {
+  align-items: center;
+  display: flex;
+  flex-direction: column;  
+  grid-area: header;
+  justify-content: space-around;
+  width: 100%;  
+}
+
+.bodyWrapper {
+  display: flex;
+  grid-area: cart;
+  justify-content: center;  
+  margin: 10px 0;
+}
+
+@media (min-width: 1400px) {
+  .headerWrapper {
+    flex-direction: row-reverse; 
+    width: 100vw;  
+  }
+
+  .bodyWrapper {
+    justify-content: flex-end;  
+  }
+}

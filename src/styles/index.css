@@ -1,0 +1,13 @@
+* {
+  margin: 0;
+  font-family: GoogleSans-Regular, -apple-system, BlinkMacSystemFont,
+    GoogleSans-Regular, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+html,
+body {
+  min-width: 300px;
+  max-width: 100%;
+  overflow-x: hidden;
+}

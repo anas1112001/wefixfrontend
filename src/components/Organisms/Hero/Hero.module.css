@@ -1,0 +1,183 @@
+/* Base mobile styles for the grid container and its elements */
+.gridWrapper {
+  margin: 2rem;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.leftBlock1 {
+  grid-area: left1;
+  padding: 8px 5%;
+}
+
+.leftBlock2 {
+  grid-area: left2;
+  padding: 8px 5%;
+}
+
+.rightBlock {
+  grid-area: right;
+}
+
+.pargraph {
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.heroImage {
+  border-radius: 50px;
+  width: 100%;
+}
+
+.heroButtonTitle {
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  padding: 0.5rem;
+  margin: 1rem;
+}
+
+.heroButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #3671e9;
+  color: white;
+  padding: 0.8rem 15px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-size: 1.5rem;
+  font-weight: bold;
+  transition: all 0.3s;
+  margin: 1rem;
+}
+
+.heroButton:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.heroIcon {
+  margin-left: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Adjustments for tablets and larger devices */
+@media (min-width: 768px) {
+  .gridWrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      'left1 left1 right'
+      'left2 left2 right';
+  }
+
+  .pargraph {
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin: 1rem;
+    width: 20rem;
+  }
+
+  .heroButtonTitle {
+    font-size: 2rem;
+  }
+
+  .heroImage {
+    width: 70%;
+    z-index: 100;
+  }
+
+  .heroButton {
+    padding: 1rem 20px;
+    font-size: 2rem;
+  }
+
+}
+
+/* Further adjustments for large desktops */
+@media (min-width: 1024px) {
+  .gridWrapper {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      ' left1 right'
+      ' left2 right';
+  }
+
+  .rightBlock {
+    justify-self: center;
+  }
+
+  .pargraph {
+    font-size: 1.7rem;
+    font-weight: 300;
+    width: 30vw;
+  }
+}
+
+@media (min-width: 1400px) {
+  .gridWrapper {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      ' left1 right'
+      ' left2 right';
+      margin:0 300px;
+  }
+
+  .leftBlock1{
+    margin: auto;
+  }
+
+  .rightBlock {
+    margin: auto;
+    justify-self: center;
+  }
+
+  .heroImage {
+    border-radius: 50px;
+    width: 100%;
+  }
+
+  .pargraph {
+    font-size: 1.7rem;
+    font-weight: 300;
+    width: 30vw;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slideInLeft {
+  animation: slideInLeft 0.5s forwards;
+}
+
+.slideInRight {
+  animation: slideInRight 0.5s forwards;
+}

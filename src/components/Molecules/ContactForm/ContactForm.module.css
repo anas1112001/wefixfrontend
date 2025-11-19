@@ -1,0 +1,55 @@
+.contactForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: var(--wildsand);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button {
+  align-self: center;
+  background-color: #3671E9;
+  border-radius: 16px;
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: var(--white);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 1rem;
+  padding: 0.8rem 1.5rem;
+  transition: all 0.3s;
+}
+
+.heading{
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .contactForm {
+    gap: 20px;
+    padding: 24px;
+  }
+
+  .button {
+    font-size: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .contactForm {
+    gap: 24px;
+    padding: 2rem;
+    width: 80%;
+  }
+
+  .button {
+    font-size: 2rem;
+  }
+}
