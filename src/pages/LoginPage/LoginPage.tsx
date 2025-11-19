@@ -7,8 +7,10 @@ import { useNavigate } from 'react-router-dom'
 import Button from 'components/Atoms/Button/Button'
 import SecureStorage from 'modules/secureStorage'
 
-import { ChangeEvent, FC, FormEvent, useEffect, useMemo, useState } from 'react'
 import Container from 'components/Atoms/Container/Container'
+import { FC, useEffect, useState } from 'react'
+import { LoginRequestApi } from 'modules/user/LoginRequestApi'
+import useForm from 'hooks/useForm'
 
 type LoginStatus = {
   error?: string
@@ -21,12 +23,11 @@ const defaultLoginValues = {
   username: 'superadmin@wefix.com',
 }
 
-const GRAPHQL_ENDPOINT =
-  process.env.REACT_APP_API_URL ?? 'https://wefix.ngrok.app/graphql'
-
 export const LoginPage: FC = () => {
+  const loginRequest = LoginRequestApi()
+
   const navigate = useNavigate()
-  const [formValues, setFormValues] = useState(defaultLoginValues)
+  
   const [showPassword, setShowPassword] = useState(false)
   const [status, setStatus] = useState<LoginStatus>({ isSubmitting: false })
 
@@ -38,92 +39,27 @@ export const LoginPage: FC = () => {
     }
   }, [])
 
-
-  const deviceMeta = useMemo(() => {
-    const hasNavigator = typeof navigator !== 'undefined'
-    const base = hasNavigator ? navigator.userAgent : 'web-browser'
-    const locale = hasNavigator ? navigator.language : 'en'
-
-    return {
-      deviceId: base.toLowerCase().slice(0, 32),
-      fcmToken: `web-fcm-${locale}`,
-    }
-  }, [])
-
-  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target
-
-    setFormValues((previous) => ({
-      ...previous,
-      [name]: value,
-    }))
-  }
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleLogin = async (formValues: typeof defaultLoginValues) => {
     setStatus({ error: undefined, isSubmitting: true, success: undefined })
 
     try {
-      const response = await fetch(GRAPHQL_ENDPOINT, {
-        body: JSON.stringify({
-          query: `
-              mutation Login($loginData: LoginInput!) {
-                login(loginData: $loginData) {
-                  message
-                  token {
-                    accessToken
-                    refreshToken
-                    tokenType
-                    expiresIn
-                  }
-                  user {
-                    id
-                    firstName
-                    lastName
-                    email
-                    userRole
-                    companyRole
-                  }
-                }
-              }
-            `,
-          variables: {
-            loginData: {
-              deviceId: deviceMeta.deviceId,
-              email: formValues.username.trim().toLowerCase(),
-              fcmToken: deviceMeta.fcmToken,
-              password: formValues.password,
-            },
-          },
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      })
+      const result = await loginRequest(
+        formValues.username,
+        formValues.password
+      )
 
-      const payload = await response.json()
-
-      if (payload.errors?.length) {
-        throw new Error(payload.errors[0].message)
+      if (!result.success || !result.token?.accessToken) {
+        throw new Error(result.message)
       }
 
-      const loginData = payload?.data?.login
-      const accessToken = loginData?.token?.accessToken
-      const refreshToken = loginData?.token?.refreshToken
+      SecureStorage.storeAccessToken(result.token.accessToken)
 
-      if (!response.ok || !accessToken) {
-        throw new Error(loginData?.message || 'Unable to sign in')
+      if (result.token.refreshToken) {
+        localStorage.setItem('wefixRefreshToken', result.token.refreshToken)
       }
 
-      SecureStorage.storeAccessToken(accessToken)
-
-      if (refreshToken) {
-        localStorage.setItem('wefixRefreshToken', refreshToken)
-      }
-
-      if (loginData?.user) {
-        localStorage.setItem('wefixUser', JSON.stringify(loginData.user))
+      if (result.user) {
+        localStorage.setItem('wefixUser', JSON.stringify(result.user))
       }
 
       setStatus({
@@ -147,6 +83,11 @@ export const LoginPage: FC = () => {
       })
     }
   }
+
+  const { formData, handleInputChange, handleSubmit } = useForm(
+    defaultLoginValues,
+    handleLogin
+  )
 
   const demoCredentials = [
     {
@@ -183,11 +124,11 @@ export const LoginPage: FC = () => {
             <Label>Username</Label>
             <InputField
               name="username"
-              onChange={handleChange}
+              onChange={handleInputChange}
               placeholder="Enter your email or username"
               required
               type="text"
-              value={formValues.username}
+              value={formData.username}
             />
           </div>
 
@@ -196,11 +137,11 @@ export const LoginPage: FC = () => {
             <div className="passwordField">
               <InputField
                 name="password"
-                onChange={handleChange}
+                onChange={handleInputChange}
                 placeholder="Enter your password"
                 required
                 type={showPassword ? 'text' : 'password'}
-                value={formValues.password}
+                value={formData.password}
               />
               <button
                 className="passwordToggle"

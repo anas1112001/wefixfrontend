@@ -1,0 +1,2 @@
+export const GRAPHQL_ENDPOINT =
+  process.env.REACT_APP_API_URL ?? 'http://localhost:4000/graphql';

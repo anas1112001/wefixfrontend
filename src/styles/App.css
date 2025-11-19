@@ -70,89 +70,261 @@ body.login-view {
   background: linear-gradient(135deg, #5e60ff 0%, #864cf7 50%, #f49b33 100%);
 }
 
-.appContainer {
+.dashboard {
+  background: #f5f6fb;
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, #2c1f53 0%, #f39a2e 100%);
+  color: #fff;
+  min-width: 220px;
+  padding: 32px 24px;
+}
+
+.sidebar .logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 40px;
+}
+
+.sidebar nav ul {
   display: flex;
   flex-direction: column;
-  align-items: center; 
-  justify-content: center; 
-  min-height: 100vh; 
+  gap: 16px;
+  list-style: none;
 }
 
-.whatsapp-float {
-  position: fixed;
-  width: 60px;
-  height: 60px;
-  bottom: 30px;
-  right: 30px;
-  background-color: transparent;
-  color: #FFFFFF;
-  border-radius: 50px;
-  text-align: center;
-  font-size: 30px;
-  box-shadow: 2px 2px 3px #999;
-  z-index: 1000; /* High z-index to ensure visibility on top of other elements */
+.sidebar nav li {
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 10px 16px;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-.whatsapp-image{
-  width: 80px;
-    background-color: transparent;
+.sidebar nav li.active,
+.sidebar nav li:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
 }
 
-.whatsapp-float i {
-  margin-top: 16px; /* Adjusts icon position within the circle */
+.content {
+  flex: 1;
+  padding: 40px 48px;
 }
 
-
-/* Adaptation for tablets and desktops */
-@media (min-width: 768px) {
-  .appContainer {
-    padding: 32px; 
-    gap: 20px;
-  }
+.content-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 32px;
 }
 
-/* Additional styles for large desktops */
-@media (min-width: 1024px) {
-  .appContainer {
-    display: flex;
-    justify-content: center; 
-    align-items: center;
-  }
+.content-header h1 {
+  font-size: 2rem;
+  margin-bottom: 4px;
 }
 
-/* Animation and keyframes for interaction */
-@keyframes slideInLeft {
-  0% {
-    opacity: 0;
-    transform: translateX(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.subtitle {
+  color: #7a819a;
 }
 
-@keyframes slideInRight {
-  0% {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.primary-button {
+  background: linear-gradient(135deg, #ffa51c, #ff7a18);
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 14px 24px;
 }
 
-.slideInLeft {
-  animation: slideInLeft 0.5s forwards;
+.filters-card,
+.tickets-card {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 15px 40px rgba(30, 33, 52, 0.08);
+  padding: 24px 28px;
 }
 
-.slideInRight {
-  animation: slideInRight 0.5s forwards;
+.filters-card {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
 }
 
-.button:hover {
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+.calendar-controls,
+.view-mode {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.icon-btn {
+  background: #f0f1f7;
+  border: none;
+  border-radius: 10px;
+  color: #5a5e75;
+  cursor: pointer;
+  font-size: 1.2rem;
+  height: 36px;
+  width: 36px;
+}
+
+.pill {
+  background: #f0f1f7;
+  border: none;
+  border-radius: 12px;
+  color: #5a5e75;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 8px 18px;
+}
+
+.pill.active {
+  background: #7759dd;
+  color: #fff;
+}
+
+.tickets-card {
+  flex: 1;
+}
+
+.tickets-toolbar {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr repeat(3, 150px) auto;
+  margin-bottom: 24px;
+}
+
+.tickets-toolbar input,
+.tickets-toolbar select {
+  border: 1px solid #e5e7f0;
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+
+.ticket-count {
+  color: #7a819a;
+  font-size: 0.9rem;
+  justify-self: end;
+}
+
+.tickets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ticket-card {
+  border: 1px solid #edf0f7;
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.ticket-card-header {
+  align-items: flex-start;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ticket-card-header h2 {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.ticket-meta {
+  color: #8b91a7;
+  display: grid;
+  gap: 8px 24px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  list-style: none;
+}
+
+.ticket-meta span {
+  color: #9ca4c8;
+  display: block;
+  font-size: 0.85rem;
+}
+
+.ticket-meta strong {
+  color: #1f2338;
+  font-weight: 600;
+}
+
+.status {
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  text-transform: uppercase;
+}
+
+.status.completed {
+  background: #e9fbef;
+  color: #2d9460;
+}
+
+.status.pending {
+  background: #fff2da;
+  color: #c67a07;
+}
+
+.status.in-progress {
+  background: #e4ecff;
+  color: #3f6ada;
+}
+
+.ticket-actions {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.ticket-actions button {
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  padding: 10px 16px;
+}
+
+.primary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.primary-actions button:nth-child(1) {
+  background: #ff8c32;
+  color: #fff;
+}
+
+.primary-actions button:nth-child(2) {
+  background: #75d0c2;
+  color: #fff;
+}
+
+.primary-actions button:nth-child(3) {
+  background: #edf1ff;
+  color: #5960c5;
+}
+
+.secondary-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.secondary-actions button {
+  background: #f7f8fc;
+  color: #ff7a95;
+}
+
+.secondary-actions button:first-child {
+  color: #6571ff;
 }
 
 .loginPage {
