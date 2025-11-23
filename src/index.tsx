@@ -1,4 +1,3 @@
-import App from 'App'
 import { appText } from 'data/appText'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
@@ -18,15 +17,12 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route element={<App />} path={appText.links[0]} />
-        <Route element={<LoginPage />} path="/login" />
+        <Route element={<LoginPage />} path="/" />
         <Route element={<LoginPage />} path={appText.links[1]} />
-        <Route element={<Dashboard />} path="/dashboard" />
         <Route element={<Dashboard />} path={appText.links[2]} />
-        <Route element={<Companies />} path="/customers/companies" />
-        <Route element={<Individuals />} path="/customers/individuals" />
-        <Route element={<Contracts />} path="/contracts" />
-        <Route element={<Dashboard />} path="/" />
+        <Route element={<Companies />} path={appText.links[5]} />
+        <Route element={<Individuals />} path={appText.links[6]} />
+        <Route element={<Contracts />} path={appText.links[7]} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

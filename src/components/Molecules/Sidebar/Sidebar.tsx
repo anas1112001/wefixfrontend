@@ -27,11 +27,11 @@ const Sidebar: FC = () => {
       label: appText.sidebar.navItems.customers,
       path: '/customers',
       subItems: [
-        { label: appText.sidebar.navItems.companies, path: '/customers/companies' },
-        { label: appText.sidebar.navItems.individuals, path: '/customers/individuals' },
+        { label: appText.sidebar.navItems.companies, path: `/${appText.links[5]}` },
+        { label: appText.sidebar.navItems.individuals, path: `/${appText.links[6]}` },
       ],
     },
-    { icon: 'fas fa-file-contract', label: appText.sidebar.navItems.contracts, path: '/contracts' },
+    { icon: 'fas fa-file-contract', label: appText.sidebar.navItems.contracts, path: `/${appText.links[7]}` },
     { icon: 'fas fa-lock', label: appText.sidebar.navItems.roles, path: '/roles' },
   ];
 

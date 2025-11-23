@@ -161,7 +161,15 @@ export const LoginPage: FC = () => {
 
   return (
     <>
-      <Container className={styles.loginPage}>
+      <Container 
+        className={styles.loginPage}
+        style={{
+          backgroundImage: 'url(/images/background.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
         <Container className={styles.loginCard}>
           <Container className={styles.loginCardHeader}>
             <Container className={styles.logoContainer}>

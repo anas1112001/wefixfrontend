@@ -1,10 +1,11 @@
-import { ReactNode, forwardRef } from 'react';
+import { CSSProperties, ReactNode, forwardRef } from 'react';
 
 interface IContainerProps {
   children: ReactNode | ReactNode[];
   className?: string;
   id?: string | number;
   onClick?: any;
+  style?: CSSProperties;
   testId?: string;
 }
 
@@ -13,6 +14,7 @@ const Container = forwardRef<HTMLDivElement, IContainerProps>(({
   className,
   id,
   onClick,
+  style,
   testId
 }, ref) => (
   <div
@@ -21,6 +23,7 @@ const Container = forwardRef<HTMLDivElement, IContainerProps>(({
     id={`${id}`}
     onClick={onClick}
     ref={ref}  // Apply ref to the div
+    style={style}
   >
     {children}
   </div>
