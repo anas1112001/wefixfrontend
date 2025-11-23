@@ -457,9 +457,330 @@ interface SubService {
     }
   }, [currentStep, formData.companyTitle, formData.contractReference]);
 
+  // Generate a simple UUID-like string
+  const generateUUID = () =>
+    'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.floor(Math.random() * 16);
+      const v = c === 'x' ? r : Math.floor(r % 4) + 8;
+
+      return v.toString(16);
+    });
+
+  // Generate company ID from company title
+  const generateCompanyId = (title: string) => {
+    const shortName = title.substring(0, 3).toUpperCase().replace(/\s/g, '');
+    const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+
+    return `${shortName}-${randomNum}`;
+  };
+
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1: // Basic Info
+        if (!formData.companyTitle || !formData.companyNameArabic || !formData.companyNameEnglish) {
+          alert('Please fill in all required fields in Basic Info step.');
+
+          return false;
+        }
+
+        return true;
+
+      case 2: // Contracts
+        if (!formData.contractTitle || !formData.businessModelLookupId || !formData.managedByLookupId) {
+          alert('Please fill in all required fields in Contracts step.');
+
+          return false;
+        }
+
+        return true;
+
+      case 3: // User Roles
+        if (!formData.fullNameAr || !formData.fullNameEn || !formData.mobileNumber || !formData.email) {
+          alert('Please fill in all required fields in User Roles step.');
+
+          return false;
+        }
+
+        return true;
+
+      case 4: // Branches
+        if (!formData.branchTitle || !formData.branchNameArabic || !formData.branchNameEnglish) {
+          alert('Please fill in all required fields in Branches step.');
+
+          return false;
+        }
+
+        return true;
+
+      case 5: // Zones
+        if (!formData.zoneTitle) {
+          alert('Please fill in all required fields in Zones step.');
+
+          return false;
+        }
+
+        return true;
+
+      case 6: // Maintenance Services
+        if (maintenanceServices.length === 0) {
+          alert('Please add at least one maintenance service.');
+
+          return false;
+        }
+
+        return true;
+
+      default:
+        return true;
+    }
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+
+    try {
+      // Validate all steps
+      for (let i = 1; i <= steps.length; i++) {
+        if (!validateStep(i)) {
+          setLoading(false);
+
+          return;
+        }
+      }
+
+      // Generate company ID
+      const companyId = generateCompanyId(formData.companyTitle);
+
+      // Step 1: Create Company
+      const createCompanyMutation = `
+        mutation CreateCompany($companyData: CreateCompanyInput!) {
+          createCompany(companyData: $companyData) {
+            company {
+              id
+              companyId
+              title
+            }
+            message
+          }
+        }
+      `;
+
+      const companyData = {
+        companyId,
+        title: formData.companyTitle,
+        companyNameArabic: formData.companyNameArabic || null,
+        companyNameEnglish: formData.companyNameEnglish || null,
+        countryLookupId: formData.countryLookupId || null,
+        establishedTypeLookupId: formData.establishedTypeLookupId || null,
+        hoAddress: formData.hoAddress || null,
+        hoLocation: formData.hoLocation || null,
+        isActive: formData.isActive ? 'ACTIVE' : 'INACTIVE',
+        numberOfBranches: formData.numberOfBranch || 0,
+        logo: null, // TODO: Handle logo upload if needed
+      };
+
+      const companyResponse = await fetch(GRAPHQL_ENDPOINT, {
+        body: JSON.stringify({
+          query: createCompanyMutation,
+          variables: { companyData },
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
+
+      const companyPayload = await companyResponse.json();
+
+      if (companyPayload.errors) {
+        throw new Error(companyPayload.errors[0].message);
+      }
+
+      const createdCompany = companyPayload.data?.createCompany?.company;
+
+      if (!createdCompany) {
+        throw new Error('Failed to create company');
+      }
+
+      const createdCompanyId = createdCompany.id;
+
+      // Step 2: Create Contract
+      const createContractMutation = `
+        mutation CreateContract($contractData: CreateContractInput!) {
+          createContract(contractData: $contractData) {
+            contract {
+              id
+              contractReference
+            }
+            message
+          }
+        }
+      `;
+
+      const contractData = {
+        contractTitle: formData.contractTitle,
+        companyId: createdCompanyId,
+        businessModelLookupId: formData.businessModelLookupId,
+        isActive: formData.isActive,
+        numberOfTeamLeaders: formData.numberOfTeamLeader || 0,
+        numberOfBranches: formData.numberOfBranch || 0,
+        numberOfPreventiveTickets: formData.numberOfPreventiveTickets || 0,
+        numberOfCorrectiveTickets: formData.numberOfCorrectiveTickets || 0,
+        contractStartDate: formData.contractStartDate || null,
+        contractEndDate: formData.contractEndDate || null,
+        contractValue: formData.contractValue ? parseFloat(formData.contractValue) : null,
+        contractDescription: formData.contractDescription || null,
+        contractFiles: null, // TODO: Handle contract files upload if needed
+      };
+
+      const contractResponse = await fetch(GRAPHQL_ENDPOINT, {
+        body: JSON.stringify({
+          query: createContractMutation,
+          variables: { contractData },
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
+
+      const contractPayload = await contractResponse.json();
+
+      if (contractPayload.errors) {
+        throw new Error(`Failed to create contract: ${contractPayload.errors[0].message}`);
+      }
+
+      // Step 3: Create Branch
+      const createBranchMutation = `
+        mutation CreateBranch($branchData: CreateBranchInput!) {
+          createBranch(branchData: $branchData) {
+            id
+            branchTitle
+          }
+        }
+      `;
+
+      const branchData = {
+        branchTitle: formData.branchTitle,
+        branchNameArabic: formData.branchNameArabic || null,
+        branchNameEnglish: formData.branchNameEnglish || null,
+        branchRepresentativeName: formData.branchRepresentativeName || null,
+        representativeMobileNumber: formData.representativeMobileNumber || null,
+        representativeEmailAddress: formData.representativeEmailAddress || null,
+        companyId: createdCompanyId,
+        teamLeaderLookupId: formData.userRolesTeamLeaderId || null,
+        isActive: formData.branchIsActive,
+      };
+
+      const branchResponse = await fetch(GRAPHQL_ENDPOINT, {
+        body: JSON.stringify({
+          query: createBranchMutation,
+          variables: { branchData },
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
+
+      const branchPayload = await branchResponse.json();
+
+      if (branchPayload.errors) {
+        throw new Error(`Failed to create branch: ${branchPayload.errors[0].message}`);
+      }
+
+      const createdBranch = branchPayload.data?.createBranch;
+
+      if (!createdBranch) {
+        throw new Error('Failed to create branch');
+      }
+
+      const createdBranchId = createdBranch.id;
+
+      // Step 4: Create Zone
+      const createZoneMutation = `
+        mutation CreateZone($zoneData: CreateZoneInput!) {
+          createZone(zoneData: $zoneData) {
+            id
+            zoneTitle
+          }
+        }
+      `;
+
+      const zoneData = {
+        zoneTitle: formData.zoneTitle,
+        zoneNumber: formData.zoneNumber || null,
+        zoneDescription: formData.zoneDescription || null,
+        branchId: createdBranchId,
+        isActive: formData.zoneIsActive,
+      };
+
+      const zoneResponse = await fetch(GRAPHQL_ENDPOINT, {
+        body: JSON.stringify({
+          query: createZoneMutation,
+          variables: { zoneData },
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
+
+      const zonePayload = await zoneResponse.json();
+
+      if (zonePayload.errors) {
+        throw new Error(`Failed to create zone: ${zonePayload.errors[0].message}`);
+      }
+
+      // Step 5: Create Maintenance Services
+      const createMaintenanceServiceMutation = `
+        mutation CreateMaintenanceService($serviceData: CreateMaintenanceServiceInput!) {
+          createMaintenanceService(serviceData: $serviceData) {
+            id
+          }
+        }
+      `;
+
+      const maintenanceServicePromises = maintenanceServices.map((service) => {
+        const serviceData = {
+          companyId: createdCompanyId,
+          mainServiceId: service.mainServiceId,
+          subServiceId: service.subServiceId,
+          isActive: true,
+        };
+
+        return fetch(GRAPHQL_ENDPOINT, {
+          body: JSON.stringify({
+            query: createMaintenanceServiceMutation,
+            variables: { serviceData },
+          }),
+          headers: { 'Content-Type': 'application/json' },
+          method: 'POST',
+        });
+      });
+
+      const maintenanceServiceResponses = await Promise.all(maintenanceServicePromises);
+
+      for (const response of maintenanceServiceResponses) {
+        const payload = await response.json();
+
+        if (payload.errors) {
+          throw new Error(`Failed to create maintenance service: ${payload.errors[0].message}`);
+        }
+      }
+
+      // Success!
+      alert('Company created successfully!');
+      onClose();
+    } catch (error: any) {
+      console.error('Error creating company:', error);
+      alert(`Failed to create company: ${error.message || 'Unknown error'}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNext = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
+    if (currentStep === steps.length) {
+      // Last step - submit
+      handleSubmit();
+    } else if (currentStep < steps.length) {
+      // Validate current step before moving to next
+      if (validateStep(currentStep)) {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -1544,8 +1865,8 @@ interface SubService {
                 {appText.companyWizard.buttons.previous}
               </Button>
             )}
-            <Button className={styles.nextButton} onClick={handleNext} type="button">
-              {currentStep === steps.length ? appText.companyWizard.buttons.finish : appText.companyWizard.buttons.next}
+            <Button className={styles.nextButton} disabled={loading} onClick={handleNext} type="button">
+              {loading ? 'Processing...' : currentStep === steps.length ? appText.companyWizard.buttons.finish : appText.companyWizard.buttons.next}
             </Button>
           </Container>
         </Container>

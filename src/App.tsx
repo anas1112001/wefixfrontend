@@ -8,7 +8,6 @@ import { useLoadData } from 'hooks/useLoadData'
 import { useSelection } from 'hooks/useSelection'
 import { useScrollTo } from 'hooks/useScrollTo'
 import { AppProvider } from 'hooks/useContext'
-import Hero from 'components/Organisms/Hero/Hero'
 import Footer from 'components/Organisms/Footer/Footer'
 
 const App: FC = () => {
@@ -46,7 +45,6 @@ const App: FC = () => {
     <AppProvider appContext={context}>
       <Container className="appContainer">
         <Header />
-        <Hero scrollToRef={techAreaRef} />
         <Footer />
       </Container>
     </AppProvider>
