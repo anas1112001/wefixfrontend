@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Container from 'components/Atoms/Container/Container';
 import Heading from 'components/Atoms/Heading/Heading';
@@ -35,13 +35,35 @@ const Sidebar: FC = () => {
     { icon: 'fas fa-lock', label: appText.sidebar.navItems.roles, path: '/roles' },
   ];
 
-  const toggleSubItems = (label: string) => {
+  // Auto-expand parent items when on a sub-route
+  useEffect(() => {
+    navItems.forEach((item) => {
+      if (item.subItems) {
+        const isOnSubRoute = item.subItems.some((subItem) => location.pathname === subItem.path);
+
+        if (isOnSubRoute && !expandedItems.includes(item.label)) {
+          setExpandedItems((prev) => [...prev, item.label]);
+        }
+      }
+    });
+  }, [location.pathname]);
+
+  const toggleSubItems = (label: string, e: React.MouseEvent) => {
+    e.preventDefault();
     setExpandedItems((prev) =>
       prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]
     );
   };
 
   const isActive = (path: string) => location.pathname === path;
+
+  const isParentActive = (item: NavItem) => {
+    if (item.subItems) {
+      return item.subItems.some((subItem) => location.pathname === subItem.path);
+    }
+
+    return location.pathname === item.path;
+  };
 
   return (
     <Container className={styles.sidebar}>
@@ -57,20 +79,28 @@ const Sidebar: FC = () => {
       <Container className={styles.navContainer}>
         {navItems.map((item) => (
           <Container key={item.label} className={styles.navItemWrapper}>
-            <Link
-              className={`${styles.navItem} ${isActive(item.path) ? styles.active : ''}`}
-              onClick={() => item.subItems && toggleSubItems(item.label)}
-              to={item.path}
-            >
-              {item.icon && <i className={item.icon}></i>}
-              <Paragraph className={styles.navLabel}>{item.label}</Paragraph>
-              {item.badge && <Container className={styles.badge}>{item.badge}</Container>}
-              {item.subItems && (
+            {item.subItems ? (
+              <Container
+                className={`${styles.navItem} ${isParentActive(item) ? styles.active : ''}`}
+                onClick={(e) => toggleSubItems(item.label, e)}
+              >
+                {item.icon && <i className={item.icon}></i>}
+                <Paragraph className={styles.navLabel}>{item.label}</Paragraph>
+                {item.badge && <Container className={styles.badge}>{item.badge}</Container>}
                 <Paragraph className={styles.expandIcon}>
                   {expandedItems.includes(item.label) ? '▼' : '▶'}
                 </Paragraph>
-              )}
-            </Link>
+              </Container>
+            ) : (
+              <Link
+                className={`${styles.navItem} ${isActive(item.path) ? styles.active : ''}`}
+                to={item.path}
+              >
+                {item.icon && <i className={item.icon}></i>}
+                <Paragraph className={styles.navLabel}>{item.label}</Paragraph>
+                {item.badge && <Container className={styles.badge}>{item.badge}</Container>}
+              </Link>
+            )}
             {item.subItems && expandedItems.includes(item.label) && (
               <Container className={styles.subItems}>
                 {item.subItems.map((subItem) => (

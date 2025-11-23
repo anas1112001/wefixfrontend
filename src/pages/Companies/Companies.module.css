@@ -1,0 +1,282 @@
+.companiesLayout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.mainContent {
+  background-color: var(--white);
+  flex: 1;
+  margin-left: 250px;
+  padding: 32px;
+}
+
+.header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.pageTitle {
+  color: #333;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.addButton {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  border: none;
+  border-radius: 8px;
+  color: var(--white);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 12px 24px;
+  transition: opacity 0.2s;
+}
+
+.addButton:hover {
+  opacity: 0.9;
+}
+
+.filtersSection {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.searchForm {
+  flex: 1;
+}
+
+.searchForm input {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.filters {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.filterSelect {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.resultsCount {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.tableContainer {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table th {
+  background-color: #f5f5f5;
+  border-bottom: 2px solid #ddd;
+  font-weight: 600;
+  padding: 12px;
+  text-align: left;
+}
+
+.table td {
+  border-bottom: 1px solid #eee;
+  padding: 12px;
+}
+
+.table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.logoCircle {
+  align-items: center;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  border-radius: 50%;
+  color: var(--white);
+  display: flex;
+  font-weight: 600;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.logoInitials {
+  color: var(--white);
+  font-size: 0.9rem;
+}
+
+.logoImage {
+  border-radius: 50%;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.statusTag {
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 12px;
+}
+
+.statusTag.active {
+  background-color: #d4edda;
+  color: #28a745;
+}
+
+.statusTag.inactive {
+  background-color: #f8d7da;
+  color: #dc3545;
+}
+
+.teamLeaders {
+  display: flex;
+  gap: 4px;
+}
+
+.leaderCircle {
+  align-items: center;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  border-radius: 50%;
+  color: var(--white);
+  display: flex;
+  font-size: 0.75rem;
+  font-weight: 600;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.actionButtonEdit {
+  background-color: #007bff;
+  border: none;
+  border-radius: 4px;
+  color: var(--white);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+.actionButtonAdd {
+  background-color: #28a745;
+  border: none;
+  border-radius: 4px;
+  color: var(--white);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+.actionButtonBranch {
+  background-color: #ff6b35;
+  border: none;
+  border-radius: 4px;
+  color: var(--white);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+.actionButtonZone {
+  background-color: #6f42c1;
+  border: none;
+  border-radius: 4px;
+  color: var(--white);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+.actionButtonManage {
+  background-color: #20c997;
+  border: none;
+  border-radius: 4px;
+  color: var(--white);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+}
+
+.pagination {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.paginationInfo {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.paginationControls {
+  display: flex;
+  gap: 8px;
+}
+
+.paginationButton {
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 8px 12px;
+  transition: background-color 0.2s;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background-color: #e9e9e9;
+}
+
+.paginationButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.paginationButton.active {
+  background-color: #ff6b35;
+  border-color: #ff6b35;
+  color: var(--white);
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0;
+    padding: 20px;
+  }
+
+  .filtersSection {
+    flex-direction: column;
+  }
+
+  .tableContainer {
+    overflow-x: scroll;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+}
+
