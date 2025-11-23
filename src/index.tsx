@@ -7,6 +7,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import 'styles/index.css'
 import 'styles/fonts.css'
+import { LoginPage } from 'pages/LoginPage/LoginPage'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -15,6 +16,8 @@ root.render(
     <BrowserRouter>
       <Routes>
         <Route element={<App />} path={appText.links[0]} />
+        <Route element={<LoginPage />} path="/login" />
+        <Route element={<LoginPage />} path={appText.links[1]} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
