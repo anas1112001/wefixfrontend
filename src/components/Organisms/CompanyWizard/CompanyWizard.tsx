@@ -23,6 +23,12 @@ interface EstablishedType {
   nameArabic: string | null;
 }
 
+interface UserRole {
+  id: string;
+  name: string;
+  nameArabic: string | null;
+}
+
 interface CompanyWizardProps {
   onClose: () => void;
 }
@@ -31,6 +37,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [countries, setCountries] = useState<Country[]>([]);
   const [establishedTypes, setEstablishedTypes] = useState<EstablishedType[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     companyTitle: '',
@@ -59,6 +66,15 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     contractFiles: [] as File[],
     contractDescription: '',
     contractValue: '',
+    // User Roles data
+    userRoleId: '',
+    fullNameAr: '',
+    fullNameEn: '',
+    userImage: null as File | null,
+    userCountryId: '',
+    mobileNumber: '',
+    email: '',
+    userDescription: '',
   });
 
   const steps = [
@@ -125,6 +141,31 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
         if (typesData.data?.getEstablishedTypes) {
           setEstablishedTypes(typesData.data.getEstablishedTypes);
         }
+
+        // Fetch User Roles
+        const userRolesResponse = await fetch(GRAPHQL_ENDPOINT, {
+          body: JSON.stringify({
+            query: `
+              query GetUserRoles {
+                getUserRoles {
+                  id
+                  name
+                  nameArabic
+                }
+              }
+            `,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
+
+        const userRolesData = await userRolesResponse.json();
+
+        if (userRolesData.data?.getUserRoles) {
+          setUserRoles(userRolesData.data.getUserRoles);
+        }
       } catch (error) {
         console.error('Error fetching lookups:', error);
       } finally {
@@ -152,6 +193,14 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
 
     if (files) {
       setFormData((prev) => ({ ...prev, contractFiles: Array.from(files) }));
+    }
+  };
+
+  const handleUserImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+
+    if (files && files[0]) {
+      setFormData((prev) => ({ ...prev, userImage: files[0] }));
     }
   };
 
@@ -711,6 +760,166 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     </Container>
   );
 
+  const renderUserRoles = () => (
+    <Container className={styles.stepContent}>
+      <Heading className={styles.sectionTitle} level="3">
+        {appText.companyWizard.userRoles.title}
+      </Heading>
+
+      <Form className={styles.form} onSubmit={handleFormSubmit}>
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-user" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.userRoles.userRole} <span className={styles.required}>*</span>
+            </label>
+            <select
+              className={styles.select}
+              onChange={(e) => handleInputChange('userRoleId', e.target.value)}
+              value={formData.userRoleId}
+            >
+              <option value="">{appText.companyWizard.userRoles.selectUserRole}</option>
+              {userRoles.map((role) => (
+                <option key={role.id} value={role.id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-user" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.userRoles.fullNameAr} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="fullNameAr"
+              onChange={(e) => handleInputChange('fullNameAr', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.userRoles.fullNameArPlaceholder}
+              title=""
+              type="text"
+              value={formData.fullNameAr}
+            />
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-user" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.userRoles.fullNameEn} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="fullNameEn"
+              onChange={(e) => handleInputChange('fullNameEn', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.userRoles.fullNameEnPlaceholder}
+              title=""
+              type="text"
+              value={formData.fullNameEn}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <Heading className={styles.sectionSubtitle} level="4">
+              {appText.companyWizard.userRoles.userImage}
+            </Heading>
+            <Container className={styles.logoUpload}>
+              <input
+                accept="image/*"
+                className={styles.fileInput}
+                id="user-image-upload"
+                onChange={handleUserImageChange}
+                type="file"
+              />
+              <label className={styles.fileLabel} htmlFor="user-image-upload">
+                <i className="fas fa-camera" style={{ fontSize: '32px', marginBottom: '8px' }}></i>
+                <Paragraph>{appText.companyWizard.userRoles.userImagePlaceholder}</Paragraph>
+              </label>
+              {formData.userImage && (
+                <Paragraph className={styles.fileName}>{formData.userImage.name}</Paragraph>
+              )}
+            </Container>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-mobile-alt" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.userRoles.country} <span className={styles.required}>*</span>
+            </label>
+            <select
+              className={styles.select}
+              onChange={(e) => handleInputChange('userCountryId', e.target.value)}
+              value={formData.userCountryId}
+            >
+              <option value="">{appText.companyWizard.userRoles.selectCountry}</option>
+              {countries.map((country) => (
+                <option key={country.id} value={country.id}>
+                  {country.name} {country.code ? `(${country.code})` : ''}
+                </option>
+              ))}
+            </select>
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-mobile-alt" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.userRoles.mobileNumber} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="mobileNumber"
+              onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.userRoles.mobileNumberPlaceholder}
+              title=""
+              type="tel"
+              value={formData.mobileNumber}
+            />
+            <Paragraph className={styles.helperText}>
+              {appText.companyWizard.userRoles.mobileNumberHelper}
+            </Paragraph>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-envelope" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.userRoles.emailAddress}
+            </label>
+            <InputField
+              name="email"
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.userRoles.emailAddressPlaceholder}
+              title=""
+              type="email"
+              value={formData.email}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-pencil-alt" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.userRoles.description}
+            </label>
+            <TextArea
+              name="userDescription"
+              onChange={(e) => handleInputChange('userDescription', e.target.value)}
+              placeholder={appText.companyWizard.userRoles.descriptionPlaceholder}
+              value={formData.userDescription}
+            />
+          </Container>
+        </Container>
+      </Form>
+    </Container>
+  );
+
   return (
     <Container className={styles.modalOverlay} onClick={onClose}>
       <Container className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -742,6 +951,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
 
         {currentStep === 1 && renderBasicInfo()}
         {currentStep === 2 && renderContracts()}
+        {currentStep === 3 && renderUserRoles()}
 
         <Container className={styles.modalFooter}>
           <Button className={styles.cancelButton} onClick={onClose} type="button">
