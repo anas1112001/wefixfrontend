@@ -50,8 +50,8 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     companyTitle: '',
     companyNameArabic: '',
     companyNameEnglish: '',
-    countryId: '',
-    establishedTypeId: '',
+    countryLookupId: '',
+    establishedTypeLookupId: '',
     hoAddress: '',
     hoLocation: '',
     logo: null as File | null,
@@ -108,37 +108,28 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
       setLoading(true);
 
       try {
-        // Fetch Countries
-        const countriesResponse = await fetch(GRAPHQL_ENDPOINT, {
+        // Fetch all lookups by category using unified lookup
+        const lookupsResponse = await fetch(GRAPHQL_ENDPOINT, {
           body: JSON.stringify({
             query: `
-              query GetCountries {
-                getCountries {
+              query GetLookupsByCategory {
+                countries: getLookupsByCategory(category: COUNTRY) {
                   id
                   name
                   code
+                  nameArabic
                 }
-              }
-            `,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        });
-
-        const countriesData = await countriesResponse.json();
-
-        if (countriesData.data?.getCountries) {
-          setCountries(countriesData.data.getCountries);
-        }
-
-        // Fetch Established Types
-        const typesResponse = await fetch(GRAPHQL_ENDPOINT, {
-          body: JSON.stringify({
-            query: `
-              query GetEstablishedTypes {
-                getEstablishedTypes {
+                establishedTypes: getLookupsByCategory(category: ESTABLISHED_TYPE) {
+                  id
+                  name
+                  nameArabic
+                }
+                userRoles: getLookupsByCategory(category: USER_ROLE) {
+                  id
+                  name
+                  nameArabic
+                }
+                teamLeaders: getLookupsByCategory(category: TEAM_LEADER) {
                   id
                   name
                   nameArabic
@@ -152,60 +143,40 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
           method: 'POST',
         });
 
-        const typesData = await typesResponse.json();
+        const lookupsData = await lookupsResponse.json();
 
-        if (typesData.data?.getEstablishedTypes) {
-          setEstablishedTypes(typesData.data.getEstablishedTypes);
+        console.log('Full GraphQL response:', JSON.stringify(lookupsData, null, 2));
+
+        if (lookupsData.errors) {
+          console.error('GraphQL errors:', lookupsData.errors);
         }
 
-        // Fetch User Roles
-        const userRolesResponse = await fetch(GRAPHQL_ENDPOINT, {
-          body: JSON.stringify({
-            query: `
-              query GetUserRoles {
-                getUserRoles {
-                  id
-                  name
-                  nameArabic
-                }
-              }
-            `,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        });
-
-        const userRolesData = await userRolesResponse.json();
-
-        if (userRolesData.data?.getUserRoles) {
-          setUserRoles(userRolesData.data.getUserRoles);
+        if (lookupsData.data?.countries) {
+          setCountries(lookupsData.data.countries);
+          console.log('Countries loaded:', lookupsData.data.countries.length, lookupsData.data.countries);
+        } else {
+          console.warn('No countries data received. Full response:', lookupsData);
         }
 
-        // Fetch Team Leaders
-        const teamLeadersResponse = await fetch(GRAPHQL_ENDPOINT, {
-          body: JSON.stringify({
-            query: `
-              query GetTeamLeaders {
-                getTeamLeaders {
-                  id
-                  name
-                  nameArabic
-                }
-              }
-            `,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        });
+        if (lookupsData.data?.establishedTypes) {
+          setEstablishedTypes(lookupsData.data.establishedTypes);
+          console.log('Established types loaded:', lookupsData.data.establishedTypes.length);
+        } else {
+          console.warn('No established types data received');
+        }
 
-        const teamLeadersData = await teamLeadersResponse.json();
+        if (lookupsData.data?.userRoles) {
+          setUserRoles(lookupsData.data.userRoles);
+          console.log('User roles loaded:', lookupsData.data.userRoles.length);
+        } else {
+          console.warn('No user roles data received');
+        }
 
-        if (teamLeadersData.data?.getTeamLeaders) {
-          setTeamLeaders(teamLeadersData.data.getTeamLeaders);
+        if (lookupsData.data?.teamLeaders) {
+          setTeamLeaders(lookupsData.data.teamLeaders);
+          console.log('Team leaders loaded:', lookupsData.data.teamLeaders.length);
+        } else {
+          console.warn('No team leaders data received');
         }
       } catch (error) {
         console.error('Error fetching lookups:', error);
@@ -354,8 +325,8 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
             </label>
             <select
               className={styles.select}
-              onChange={(e) => handleInputChange('countryId', e.target.value)}
-              value={formData.countryId}
+              onChange={(e) => handleInputChange('countryLookupId', e.target.value)}
+              value={formData.countryLookupId}
             >
               <option value="">{appText.companyWizard.basicInfo.selectCountry}</option>
               {countries.map((country) => (
@@ -371,8 +342,8 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
             </label>
             <select
               className={styles.select}
-              onChange={(e) => handleInputChange('establishedTypeId', e.target.value)}
-              value={formData.establishedTypeId}
+              onChange={(e) => handleInputChange('establishedTypeLookupId', e.target.value)}
+              value={formData.establishedTypeLookupId}
             >
               <option value="">{appText.companyWizard.basicInfo.selectType}</option>
               {establishedTypes.map((type) => (

@@ -12,9 +12,16 @@ import styles from './Companies.module.css';
 
 const GRAPHQL_ENDPOINT = process.env.REACT_APP_API_URL ?? 'http://localhost:4000/graphql';
 
+interface Lookup {
+  id: string;
+  name: string;
+  nameArabic: string | null;
+}
+
 interface Company {
   companyId: string;
-  establishedType: string;
+  countryLookup: Lookup | null;
+  establishedTypeLookup: Lookup | null;
   id: string;
   isActive: string;
   logo: string | null;
@@ -40,6 +47,7 @@ const Companies: FC = () => {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [showWizard, setShowWizard] = useState(false);
+  const [establishedTypes, setEstablishedTypes] = useState<Lookup[]>([]);
   const limit = 10;
 
   const fetchCompanies = async () => {
@@ -73,7 +81,16 @@ const Companies: FC = () => {
                   companyId
                   title
                   isActive
-                  establishedType
+                  establishedTypeLookup {
+                    id
+                    name
+                    nameArabic
+                  }
+                  countryLookup {
+                    id
+                    name
+                    nameArabic
+                  }
                   numberOfBranches
                   logo
                 }
@@ -110,6 +127,40 @@ const Companies: FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const fetchEstablishedTypes = async () => {
+      try {
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+          body: JSON.stringify({
+            query: `
+              query GetEstablishedTypes {
+                getLookupsByCategory(category: ESTABLISHED_TYPE) {
+                  id
+                  name
+                  nameArabic
+                }
+              }
+            `,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
+
+        const payload = await response.json();
+
+        if (payload.data?.getLookupsByCategory) {
+          setEstablishedTypes(payload.data.getLookupsByCategory);
+        }
+      } catch (error) {
+        console.error('Error fetching established types:', error);
+      }
+    };
+
+    fetchEstablishedTypes();
+  }, []);
 
   useEffect(() => {
     fetchCompanies();
@@ -183,10 +234,11 @@ const Companies: FC = () => {
               value={typeFilter}
             >
               <option value="all">{appText.companies.allTypes}</option>
-              <option value="LLC">LLC</option>
-              <option value="Corporation">Corporation</option>
-              <option value="Partnership">Partnership</option>
-              <option value="Sole Proprietorship">Sole Proprietorship</option>
+              {establishedTypes.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
+                </option>
+              ))}
             </select>
             <Paragraph className={styles.resultsCount}>
               {appText.companies.showingResults.replace('{count}', total.toString())}
@@ -235,7 +287,7 @@ const Companies: FC = () => {
                           {company.isActive}
                         </span>
                       </td>
-                      <td>{company.establishedType}</td>
+                      <td>{company.establishedTypeLookup?.name || '-'}</td>
                       <td>{company.numberOfBranches}</td>
                       <td>
                         <Container className={styles.teamLeaders}>
