@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 import Container from 'components/Atoms/Container/Container';
 import Heading from 'components/Atoms/Heading/Heading';
 import Paragraph from 'components/Atoms/Paragraph/Paragraph';
@@ -478,7 +479,11 @@ interface SubService {
     switch (step) {
       case 1: // Basic Info
         if (!formData.companyTitle || !formData.companyNameArabic || !formData.companyNameEnglish) {
-          alert('Please fill in all required fields in Basic Info step.');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: 'Please fill in all required fields in Basic Info step.',
+          });
 
           return false;
         }
@@ -487,7 +492,11 @@ interface SubService {
 
       case 2: // Contracts
         if (!formData.contractTitle || !formData.businessModelLookupId || !formData.managedByLookupId) {
-          alert('Please fill in all required fields in Contracts step.');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: 'Please fill in all required fields in Contracts step.',
+          });
 
           return false;
         }
@@ -496,7 +505,11 @@ interface SubService {
 
       case 3: // User Roles
         if (!formData.fullNameAr || !formData.fullNameEn || !formData.mobileNumber || !formData.email) {
-          alert('Please fill in all required fields in User Roles step.');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: 'Please fill in all required fields in User Roles step.',
+          });
 
           return false;
         }
@@ -505,7 +518,11 @@ interface SubService {
 
       case 4: // Branches
         if (!formData.branchTitle || !formData.branchNameArabic || !formData.branchNameEnglish) {
-          alert('Please fill in all required fields in Branches step.');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: 'Please fill in all required fields in Branches step.',
+          });
 
           return false;
         }
@@ -514,7 +531,11 @@ interface SubService {
 
       case 5: // Zones
         if (!formData.zoneTitle) {
-          alert('Please fill in all required fields in Zones step.');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: 'Please fill in all required fields in Zones step.',
+          });
 
           return false;
         }
@@ -523,7 +544,11 @@ interface SubService {
 
       case 6: // Maintenance Services
         if (maintenanceServices.length === 0) {
-          alert('Please add at least one maintenance service.');
+          Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            text: 'Please add at least one maintenance service.',
+          });
 
           return false;
         }
@@ -762,11 +787,21 @@ interface SubService {
       }
 
       // Success!
-      alert('Company created successfully!');
+      await Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: 'Company created successfully!',
+        timer: 2000,
+        showConfirmButton: false,
+      });
       onClose();
     } catch (error: any) {
       console.error('Error creating company:', error);
-      alert(`Failed to create company: ${error.message || 'Unknown error'}`);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: `Failed to create company: ${error.message || 'Unknown error'}`,
+      });
     } finally {
       setLoading(false);
     }

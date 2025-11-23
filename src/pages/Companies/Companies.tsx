@@ -1,4 +1,5 @@
 import React, { FC, useEffect, useState } from 'react';
+import Swal from 'sweetalert2';
 import Container from 'components/Atoms/Container/Container';
 import Form from 'components/Atoms/Form/Form';
 import Heading from 'components/Atoms/Heading/Heading';
@@ -123,6 +124,13 @@ const Companies: FC = () => {
       setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching companies:', error);
+      const message = error instanceof Error ? error.message : 'Failed to fetch companies';
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: message,
+      });
     } finally {
       setLoading(false);
     }
@@ -156,6 +164,13 @@ const Companies: FC = () => {
         }
       } catch (error) {
         console.error('Error fetching established types:', error);
+        const message = error instanceof Error ? error.message : 'Failed to fetch established types';
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: message,
+        });
       }
     };
 

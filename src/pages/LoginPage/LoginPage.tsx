@@ -1,5 +1,6 @@
 import React, { ChangeEvent, FC, FormEvent, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import Button from 'components/Atoms/Button/Button';
 import Container from 'components/Atoms/Container/Container';
 import Form from 'components/Atoms/Form/Form';
@@ -132,9 +133,15 @@ export const LoginPage: FC = () => {
         success: appText.login.successMessage,
       });
 
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 800);
+      await Swal.fire({
+        icon: 'success',
+        title: 'Success!',
+        text: appText.login.successMessage,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      navigate('/dashboard');
     } catch (error) {
       const message =
         error instanceof Error ? error.message : appText.login.errorMessage;
@@ -142,6 +149,12 @@ export const LoginPage: FC = () => {
       setStatus({
         error: message,
         isSubmitting: false,
+      });
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: message,
       });
     }
   };
@@ -214,10 +227,6 @@ export const LoginPage: FC = () => {
               </button>
             </Container>
 
-            {status.error && <Paragraph className={styles.loginError}>{status.error}</Paragraph>}
-            {status.success && (
-              <Paragraph className={styles.loginSuccess}>{status.success}</Paragraph>
-            )}
 
             <Button className={styles.loginButton} onClick={() => undefined} type="submit">
               {status.isSubmitting ? appText.login.signingIn : appText.login.signIn}
