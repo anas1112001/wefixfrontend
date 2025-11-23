@@ -49,6 +49,12 @@ interface ManagedBy {
   nameArabic: string | null;
 }
 
+interface Contract {
+  contractReference: string;
+  contractTitle: string;
+  id: string;
+}
+
 interface CompanyWizardProps {
   onClose: () => void;
 }
@@ -61,6 +67,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
   const [teamLeaders, setTeamLeaders] = useState<TeamLeader[]>([]);
   const [businessModels, setBusinessModels] = useState<BusinessModel[]>([]);
   const [managedBy, setManagedBy] = useState<ManagedBy[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     companyTitle: '',
@@ -72,6 +79,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     hoLocation: '',
     logo: null as File | null,
     // Contract data
+    contractId: '',
     contractReference: '',
     contractTitle: '',
     businessModelLookupId: '',
@@ -267,8 +275,58 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     fetchLookups();
   }, []);
 
+  useEffect(() => {
+    const fetchContracts = async () => {
+      try {
+        const response = await fetch(GRAPHQL_ENDPOINT, {
+          body: JSON.stringify({
+            query: `
+              query GetContracts {
+                getContracts(filter: { limit: 100, page: 1 }) {
+                  contracts {
+                    id
+                    contractReference
+                    contractTitle
+                  }
+                }
+              }
+            `,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
+
+        const payload = await response.json();
+
+        if (payload.data?.getContracts?.contracts) {
+          setContracts(payload.data.getContracts.contracts);
+          console.log('Contracts loaded:', payload.data.getContracts.contracts.length);
+        }
+      } catch (error) {
+        console.error('Error fetching contracts:', error);
+      }
+    };
+
+    fetchContracts();
+  }, []);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleContractChange = (contractId: string) => {
+    const selectedContract = contracts.find((c) => c.id === contractId);
+
+    if (selectedContract) {
+      setFormData((prev) => ({
+        ...prev,
+        contractId: selectedContract.id,
+        contractReference: selectedContract.contractReference,
+        contractTitle: selectedContract.contractTitle,
+      }));
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -496,36 +554,57 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
           <Container className={styles.formField}>
             <label className={styles.label}>
               <i className="fas fa-clipboard" style={{ marginRight: '8px' }}></i>
-              {appText.companyWizard.contracts.contractReference}
+              {appText.companyWizard.contracts.contractReference} <span className={styles.required}>*</span>
             </label>
-            <InputField
-              name="contractReference"
-              onChange={(e) => handleInputChange('contractReference', e.target.value)}
-              pattern={undefined}
-              placeholder="CNT-101"
-              title=""
-              type="text"
-              value={formData.contractReference}
-            />
+            <select
+              className={styles.select}
+              onChange={(e) => handleContractChange(e.target.value)}
+              required
+              value={formData.contractId}
+            >
+              <option value="">{appText.companyWizard.contracts.selectContract || 'Select Contract'}</option>
+              {contracts.map((contract) => (
+                <option key={contract.id} value={contract.id}>
+                  {contract.contractReference} - {contract.contractTitle}
+                </option>
+              ))}
+            </select>
           </Container>
         </Container>
 
-        <Container className={styles.formRow}>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              {appText.companyWizard.contracts.contractTitle}
-            </label>
-            <InputField
-              name="contractTitle"
-              onChange={(e) => handleInputChange('contractTitle', e.target.value)}
-              pattern={undefined}
-              placeholder={appText.companyWizard.contracts.contractTitlePlaceholder}
-              title=""
-              type="text"
-              value={formData.contractTitle}
-            />
+        {formData.contractId && (
+          <Container className={styles.formRow}>
+            <Container className={styles.formField}>
+              <label className={styles.label}>
+                {appText.companyWizard.contracts.contractTitle}
+              </label>
+              <input
+                className={styles.inputField}
+                name="contractTitle"
+                readOnly
+                title=""
+                type="text"
+                value={formData.contractTitle}
+              />
+              <Paragraph className={styles.helperText}>
+                {appText.companyWizard.contracts.autoGenerated || 'Auto-filled from selected contract'}
+              </Paragraph>
+            </Container>
+            <Container className={styles.formField}>
+              <label className={styles.label}>
+                {appText.companyWizard.contracts.contractReference}
+              </label>
+              <input
+                className={styles.inputField}
+                name="contractReference"
+                readOnly
+                title=""
+                type="text"
+                value={formData.contractReference}
+              />
+            </Container>
           </Container>
-        </Container>
+        )}
 
         <Container className={styles.formRow}>
           <Container className={styles.formField}>

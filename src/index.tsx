@@ -11,6 +11,7 @@ import { LoginPage } from 'pages/LoginPage/LoginPage'
 import Dashboard from 'pages/Dashboard/Dashboard'
 import Companies from 'pages/Companies/Companies'
 import Individuals from 'pages/Individuals/Individuals'
+import Contracts from 'pages/Contracts/Contracts'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -25,6 +26,7 @@ root.render(
         <Route element={<Dashboard />} path={appText.links[2]} />
         <Route element={<Companies />} path="/customers/companies" />
         <Route element={<Individuals />} path="/customers/individuals" />
+        <Route element={<Contracts />} path="/contracts" />
         <Route element={<Dashboard />} path="/" />
       </Routes>
     </BrowserRouter>
