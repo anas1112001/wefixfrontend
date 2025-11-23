@@ -29,6 +29,12 @@ interface UserRole {
   nameArabic: string | null;
 }
 
+interface TeamLeader {
+  id: string;
+  name: string;
+  nameArabic: string | null;
+}
+
 interface CompanyWizardProps {
   onClose: () => void;
 }
@@ -38,6 +44,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
   const [countries, setCountries] = useState<Country[]>([]);
   const [establishedTypes, setEstablishedTypes] = useState<EstablishedType[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+  const [teamLeaders, setTeamLeaders] = useState<TeamLeader[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     companyTitle: '',
@@ -75,6 +82,15 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     mobileNumber: '',
     email: '',
     userDescription: '',
+    // Branches data
+    branchTitle: '',
+    branchNameArabic: '',
+    branchNameEnglish: '',
+    branchRepresentativeName: '',
+    representativeMobileNumber: '',
+    representativeEmailAddress: '',
+    teamLeaderId: '',
+    branchIsActive: true,
   });
 
   const steps = [
@@ -165,6 +181,31 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
 
         if (userRolesData.data?.getUserRoles) {
           setUserRoles(userRolesData.data.getUserRoles);
+        }
+
+        // Fetch Team Leaders
+        const teamLeadersResponse = await fetch(GRAPHQL_ENDPOINT, {
+          body: JSON.stringify({
+            query: `
+              query GetTeamLeaders {
+                getTeamLeaders {
+                  id
+                  name
+                  nameArabic
+                }
+              }
+            `,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          method: 'POST',
+        });
+
+        const teamLeadersData = await teamLeadersResponse.json();
+
+        if (teamLeadersData.data?.getTeamLeaders) {
+          setTeamLeaders(teamLeadersData.data.getTeamLeaders);
         }
       } catch (error) {
         console.error('Error fetching lookups:', error);
@@ -920,6 +961,149 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     </Container>
   );
 
+  const renderBranches = () => (
+    <Container className={styles.stepContent}>
+      <Heading className={styles.sectionTitle} level="3">
+        {appText.companyWizard.branches.title}
+      </Heading>
+
+      <Form className={styles.form} onSubmit={handleFormSubmit}>
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.branchTitle} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="branchTitle"
+              onChange={(e) => handleInputChange('branchTitle', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.branchTitlePlaceholder}
+              title=""
+              type="text"
+              value={formData.branchTitle}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.branchNameArabic} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="branchNameArabic"
+              onChange={(e) => handleInputChange('branchNameArabic', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.branchNameArabicPlaceholder}
+              title=""
+              type="text"
+              value={formData.branchNameArabic}
+            />
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.branchNameEnglish} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="branchNameEnglish"
+              onChange={(e) => handleInputChange('branchNameEnglish', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.branchNameEnglishPlaceholder}
+              title=""
+              type="text"
+              value={formData.branchNameEnglish}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.branchRepresentativeName} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="branchRepresentativeName"
+              onChange={(e) => handleInputChange('branchRepresentativeName', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.branchRepresentativeNamePlaceholder}
+              title=""
+              type="text"
+              value={formData.branchRepresentativeName}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.representativeMobileNumber} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="representativeMobileNumber"
+              onChange={(e) => handleInputChange('representativeMobileNumber', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.representativeMobileNumberPlaceholder}
+              title=""
+              type="tel"
+              value={formData.representativeMobileNumber}
+            />
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.representativeEmailAddress}
+            </label>
+            <InputField
+              name="representativeEmailAddress"
+              onChange={(e) => handleInputChange('representativeEmailAddress', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.representativeEmailAddressPlaceholder}
+              title=""
+              type="email"
+              value={formData.representativeEmailAddress}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.teamLeader}
+            </label>
+            <select
+              className={styles.select}
+              onChange={(e) => handleInputChange('teamLeaderId', e.target.value)}
+              value={formData.teamLeaderId}
+            >
+              <option value="">{appText.companyWizard.branches.selectTeamLeader}</option>
+              {teamLeaders.map((leader) => (
+                <option key={leader.id} value={leader.id}>
+                  {leader.name}
+                </option>
+              ))}
+            </select>
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>{appText.companyWizard.branches.isActive}</label>
+            <Container className={styles.toggleContainer}>
+              <label className={styles.toggleLabel}>
+                <input
+                  checked={formData.branchIsActive}
+                  className={styles.toggleInput}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, branchIsActive: e.target.checked }))}
+                  type="checkbox"
+                />
+                <span className={`${styles.toggleSlider} ${formData.branchIsActive ? styles.toggleActive : ''}`}></span>
+                <span className={styles.toggleText}>
+                  {formData.branchIsActive ? appText.companyWizard.branches.active : appText.companyWizard.branches.inactive}
+                </span>
+              </label>
+            </Container>
+          </Container>
+        </Container>
+      </Form>
+    </Container>
+  );
+
   return (
     <Container className={styles.modalOverlay} onClick={onClose}>
       <Container className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -952,6 +1136,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
         {currentStep === 1 && renderBasicInfo()}
         {currentStep === 2 && renderContracts()}
         {currentStep === 3 && renderUserRoles()}
+        {currentStep === 4 && renderBranches()}
 
         <Container className={styles.modalFooter}>
           <Button className={styles.cancelButton} onClick={onClose} type="button">
