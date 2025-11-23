@@ -1,0 +1,57 @@
+.metricCard {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.metricCard:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.metricCard.orange {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+}
+
+.metricCard.green {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.metricCard.red {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.cardTitle {
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+}
+
+.cardValue {
+  color: var(--white);
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .metricCard {
+    padding: 28px;
+  }
+
+  .cardTitle {
+    font-size: 1.1rem;
+  }
+
+  .cardValue {
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cardValue {
+    font-size: 3.5rem;
+  }
+}

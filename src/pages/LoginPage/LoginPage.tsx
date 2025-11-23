@@ -8,6 +8,7 @@ import InputField from 'components/Atoms/InputField/InputField';
 import Label from 'components/Atoms/Label/Label';
 import Paragraph from 'components/Atoms/Paragraph/Paragraph';
 import SecureStorage from 'modules/secureStorage';
+import { appText } from 'data/appText';
 // import { ForgotPasswordModal } from './ForgotPasswordModal';
 import styles from './LoginPage.module.css';
 
@@ -112,7 +113,7 @@ export const LoginPage: FC = () => {
       const refreshToken = loginData?.token?.refreshToken;
 
       if (!response.ok || !accessToken) {
-        throw new Error(loginData?.message || 'Unable to sign in');
+        throw new Error(loginData?.message || appText.login.errorMessage);
       }
 
       SecureStorage.storeAccessToken(accessToken);
@@ -128,7 +129,7 @@ export const LoginPage: FC = () => {
       setStatus({
         error: undefined,
         isSubmitting: false,
-        success: 'Signed in successfully. Redirecting…',
+        success: appText.login.successMessage,
       });
 
       setTimeout(() => {
@@ -136,7 +137,7 @@ export const LoginPage: FC = () => {
       }, 800);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Unable to sign in. Please try again.';
+        error instanceof Error ? error.message : appText.login.errorMessage;
 
       setStatus({
         error: message,
@@ -154,22 +155,22 @@ export const LoginPage: FC = () => {
               <i className={`fas fa-wrench ${styles.logoIcon}`}></i>
               <i className={`fas fa-lock ${styles.logoIcon}`}></i>
               <Heading className={styles.logoText} level="2">
-                WeFix
+                {appText.login.brandName}
               </Heading>
             </Container>
             <Paragraph className={styles.welcomeText}>
-              Welcome back! Please sign in to your account
+              {appText.login.welcomeMessage}
             </Paragraph>
           </Container>
 
           <Form className={styles.loginForm} onSubmit={handleSubmit}>
             <Container className={styles.loginField}>
-              <Label>Username</Label>
+              <Label>{appText.login.usernameLabel}</Label>
               <InputField
                 name="username"
                 onChange={handleChange}
                 pattern={undefined}
-                placeholder="Enter your email or username"
+                placeholder={appText.login.usernamePlaceholder}
                 required
                 title=""
                 type="text"
@@ -178,13 +179,13 @@ export const LoginPage: FC = () => {
             </Container>
 
             <Container className={styles.loginField}>
-              <Label>Password</Label>
+              <Label>{appText.login.passwordLabel}</Label>
               <Container className={styles.passwordField}>
                 <InputField
                   name="password"
                   onChange={handleChange}
                   pattern={undefined}
-                  placeholder="Enter your password"
+                  placeholder={appText.login.passwordPlaceholder}
                   required
                   title=""
                   type={showPassword ? 'text' : 'password'}
@@ -209,7 +210,7 @@ export const LoginPage: FC = () => {
                 }}
                 type="button"
               >
-                Forgot Password?
+                {appText.login.forgotPassword}
               </button>
             </Container>
 
@@ -219,7 +220,7 @@ export const LoginPage: FC = () => {
             )}
 
             <Button className={styles.loginButton} onClick={() => undefined} type="submit">
-              {status.isSubmitting ? 'Signing In…' : 'Sign In'}
+              {status.isSubmitting ? appText.login.signingIn : appText.login.signIn}
             </Button>
           </Form>
 
@@ -227,10 +228,10 @@ export const LoginPage: FC = () => {
             <Container className={styles.demoHeader}>
               <i className={`fas fa-wrench ${styles.demoIcon}`}></i>
               <i className={`fas fa-lock ${styles.demoIcon}`}></i>
-              <Paragraph className={styles.demoTitle}>Demo Credentials</Paragraph>
+              <Paragraph className={styles.demoTitle}>{appText.login.demoCredentials}</Paragraph>
             </Container>
-            <Paragraph className={styles.demoText}>Username: superadmin</Paragraph>
-            <Paragraph className={styles.demoText}>Password: superadmin@123</Paragraph>
+            <Paragraph className={styles.demoText}>{appText.login.demoUsername}</Paragraph>
+            <Paragraph className={styles.demoText}>{appText.login.demoPassword}</Paragraph>
           </Container>
         </Container>
       </Container>
