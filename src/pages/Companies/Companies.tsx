@@ -6,6 +6,7 @@ import Paragraph from 'components/Atoms/Paragraph/Paragraph';
 import InputField from 'components/Atoms/InputField/InputField';
 import Button from 'components/Atoms/Button/Button';
 import Sidebar from 'components/Molecules/Sidebar/Sidebar';
+import CompanyWizard from 'components/Organisms/CompanyWizard/CompanyWizard';
 import { appText } from 'data/appText';
 import styles from './Companies.module.css';
 
@@ -38,6 +39,7 @@ const Companies: FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [showWizard, setShowWizard] = useState(false);
   const limit = 10;
 
   const fetchCompanies = async () => {
@@ -142,7 +144,7 @@ const Companies: FC = () => {
           <Heading className={styles.pageTitle} level="1">
             {appText.companies.title}
           </Heading>
-          <Button className={styles.addButton} onClick={() => undefined} type="button">
+          <Button className={styles.addButton} onClick={() => setShowWizard(true)} type="button">
             {appText.companies.addNew}
           </Button>
         </Container>
@@ -324,6 +326,7 @@ const Companies: FC = () => {
           </>
         )}
       </Container>
+      {showWizard && <CompanyWizard onClose={() => setShowWizard(false)} />}
     </Container>
   );
 };

@@ -1,8 +1,8 @@
-# TheSIS
+# WeFIx
 
 ## Web Application
 
-TheSIS is a web application for presenting a coffee products for a coffee provider, it shows the products in pretty way
+WeFIx is a web application for presenting a coffee products for a coffee provider, it shows the products in pretty way
 with functionality of adding removing and updating it.
 
 ---

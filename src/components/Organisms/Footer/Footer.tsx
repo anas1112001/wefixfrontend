@@ -27,7 +27,7 @@ const Footer = () => (
             <Image src="images/visa.png" alt="Visa Payment" />
         </Container>
         <Container className={styles.copyRightWrapper}>
-            <Paragraph className={styles.copyRight}>©2025 TheSIS. All rights reserved</Paragraph>
+            <Paragraph className={styles.copyRight}>©2025 WeFIx. All rights reserved</Paragraph>
         </Container>
         <Container className={styles.socialMediaWrapper}>
             <Link href="https://www.facebook.com"> <Image src="images/facebook.png" alt="Facebook" className={styles.socialIcon} /></Link>

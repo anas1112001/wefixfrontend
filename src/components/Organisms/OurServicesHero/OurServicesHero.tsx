@@ -13,12 +13,12 @@ const OurServicesHero = () => (
     <Section
       imageSrc="/images/our-services-02.png"
       title="3D Printing"
-      description="TheSIS provides comprehensive 3D printing services that enhance your business operations and product development. We specialize in delivering high-efficiency solutions that transform your concepts into reality, raising the level of innovation and efficiency in your production processes and products."
+      description="WeFIx provides comprehensive 3D printing services that enhance your business operations and product development. We specialize in delivering high-efficiency solutions that transform your concepts into reality, raising the level of innovation and efficiency in your production processes and products."
     />
     <Section
       imageSrc="/images/our-services-03.png"
       title="Application Development"
-      description="TheSIS offers specialized application development services to enhance your business operations. Our expert developers create robust and efficient applications, ensuring seamless integration and innovation to elevate your digital presence."
+      description="WeFIx offers specialized application development services to enhance your business operations. Our expert developers create robust and efficient applications, ensuring seamless integration and innovation to elevate your digital presence."
     />
   </Container>
 )
