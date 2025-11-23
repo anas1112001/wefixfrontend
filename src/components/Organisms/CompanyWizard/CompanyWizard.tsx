@@ -35,6 +35,20 @@ interface TeamLeader {
   nameArabic: string | null;
 }
 
+interface BusinessModel {
+  id: string;
+  isDefault?: boolean;
+  name: string;
+  nameArabic: string | null;
+}
+
+interface ManagedBy {
+  id: string;
+  isDefault?: boolean;
+  name: string;
+  nameArabic: string | null;
+}
+
 interface CompanyWizardProps {
   onClose: () => void;
 }
@@ -45,6 +59,8 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
   const [establishedTypes, setEstablishedTypes] = useState<EstablishedType[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [teamLeaders, setTeamLeaders] = useState<TeamLeader[]>([]);
+  const [businessModels, setBusinessModels] = useState<BusinessModel[]>([]);
+  const [managedBy, setManagedBy] = useState<ManagedBy[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     companyTitle: '',
@@ -58,8 +74,8 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     // Contract data
     contractReference: '',
     contractTitle: '',
-    businessModel: 'B2B',
-    managedBy: 'WeFix Team',
+    businessModelLookupId: '',
+    managedByLookupId: '',
     ticketShortCode: '',
     isActive: true,
     numberOfOwner: 1,
@@ -109,33 +125,50 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
 
       try {
         // Fetch all lookups by category using unified lookup
+        const queryString = `
+          query GetLookupsByCategory {
+            countries: getLookupsByCategory(category: COUNTRY) {
+              id
+              name
+              code
+              nameArabic
+            }
+            establishedTypes: getLookupsByCategory(category: ESTABLISHED_TYPE) {
+              id
+              name
+              nameArabic
+            }
+            userRoles: getLookupsByCategory(category: USER_ROLE) {
+              id
+              name
+              nameArabic
+            }
+            teamLeaders: getLookupsByCategory(category: TEAM_LEADER) {
+              id
+              name
+              nameArabic
+            }
+            businessModels: getLookupsByCategory(category: BUSINESS_MODEL) {
+              id
+              name
+              nameArabic
+              isDefault
+            }
+            managedBy: getLookupsByCategory(category: MANAGED_BY) {
+              id
+              name
+              nameArabic
+              isDefault
+            }
+          }
+        `;
+
+        console.log('Sending GraphQL query:', queryString);
+        console.log('GraphQL endpoint:', GRAPHQL_ENDPOINT);
+
         const lookupsResponse = await fetch(GRAPHQL_ENDPOINT, {
           body: JSON.stringify({
-            query: `
-              query GetLookupsByCategory {
-                countries: getLookupsByCategory(category: COUNTRY) {
-                  id
-                  name
-                  code
-                  nameArabic
-                }
-                establishedTypes: getLookupsByCategory(category: ESTABLISHED_TYPE) {
-                  id
-                  name
-                  nameArabic
-                }
-                userRoles: getLookupsByCategory(category: USER_ROLE) {
-                  id
-                  name
-                  nameArabic
-                }
-                teamLeaders: getLookupsByCategory(category: TEAM_LEADER) {
-                  id
-                  name
-                  nameArabic
-                }
-              }
-            `,
+            query: queryString,
           }),
           headers: {
             'Content-Type': 'application/json',
@@ -143,12 +176,30 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
           method: 'POST',
         });
 
+        if (!lookupsResponse.ok) {
+          console.error('HTTP error:', lookupsResponse.status, lookupsResponse.statusText);
+
+          const text = await lookupsResponse.text();
+
+          console.error('Response text:', text);
+
+          return;
+        }
+
         const lookupsData = await lookupsResponse.json();
 
         console.log('Full GraphQL response:', JSON.stringify(lookupsData, null, 2));
 
         if (lookupsData.errors) {
           console.error('GraphQL errors:', lookupsData.errors);
+
+          return;
+        }
+
+        if (!lookupsData.data) {
+          console.error('No data in GraphQL response:', lookupsData);
+
+          return;
         }
 
         if (lookupsData.data?.countries) {
@@ -177,6 +228,34 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
           console.log('Team leaders loaded:', lookupsData.data.teamLeaders.length);
         } else {
           console.warn('No team leaders data received');
+        }
+
+        if (lookupsData.data?.businessModels) {
+          setBusinessModels(lookupsData.data.businessModels);
+          console.log('Business models loaded:', lookupsData.data.businessModels.length);
+          // Set default business model (B2B - first one with isDefault or first in list)
+
+          const defaultBusinessModel = lookupsData.data.businessModels.find((bm: any) => bm.isDefault) || lookupsData.data.businessModels[0];
+
+          if (defaultBusinessModel && !formData.businessModelLookupId) {
+            setFormData((prev) => ({ ...prev, businessModelLookupId: defaultBusinessModel.id }));
+          }
+        } else {
+          console.warn('No business models data received');
+        }
+
+        if (lookupsData.data?.managedBy) {
+          setManagedBy(lookupsData.data.managedBy);
+          console.log('Managed by loaded:', lookupsData.data.managedBy.length);
+          // Set default managed by (WeFix Team - one with isDefault or second in list)
+
+          const defaultManagedBy = lookupsData.data.managedBy.find((mb: any) => mb.isDefault) || lookupsData.data.managedBy[1] || lookupsData.data.managedBy[0];
+
+          if (defaultManagedBy && !formData.managedByLookupId) {
+            setFormData((prev) => ({ ...prev, managedByLookupId: defaultManagedBy.id }));
+          }
+        } else {
+          console.warn('No managed by data received');
         }
       } catch (error) {
         console.error('Error fetching lookups:', error);
@@ -453,55 +532,35 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
             <label className={styles.label}>
               {appText.companyWizard.contracts.businessModel} <span className={styles.required}>*</span>
             </label>
-            <Container className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  checked={formData.businessModel === 'B2B'}
-                  className={styles.radioInput}
-                  name="businessModel"
-                  onChange={() => handleInputChange('businessModel', 'B2B')}
-                  type="radio"
-                />
-                <span>{appText.companyWizard.contracts.businessModelB2B}</span>
-              </label>
-              <label className={styles.radioLabel}>
-                <input
-                  checked={formData.businessModel === 'White Label'}
-                  className={styles.radioInput}
-                  name="businessModel"
-                  onChange={() => handleInputChange('businessModel', 'White Label')}
-                  type="radio"
-                />
-                <span>{appText.companyWizard.contracts.businessModelWhiteLabel}</span>
-              </label>
-            </Container>
+            <select
+              className={styles.select}
+              onChange={(e) => handleInputChange('businessModelLookupId', e.target.value)}
+              value={formData.businessModelLookupId}
+            >
+              <option value="">{appText.companyWizard.contracts.selectBusinessModel}</option>
+              {businessModels.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </select>
           </Container>
           <Container className={styles.formField}>
             <label className={styles.label}>
               {appText.companyWizard.contracts.managedBy} <span className={styles.required}>*</span>
             </label>
-            <Container className={styles.radioGroup}>
-              <label className={styles.radioLabel}>
-                <input
-                  checked={formData.managedBy === 'Client Team'}
-                  className={styles.radioInput}
-                  name="managedBy"
-                  onChange={() => handleInputChange('managedBy', 'Client Team')}
-                  type="radio"
-                />
-                <span>{appText.companyWizard.contracts.managedByClientTeam}</span>
-              </label>
-              <label className={styles.radioLabel}>
-                <input
-                  checked={formData.managedBy === 'WeFix Team'}
-                  className={styles.radioInput}
-                  name="managedBy"
-                  onChange={() => handleInputChange('managedBy', 'WeFix Team')}
-                  type="radio"
-                />
-                <span>{appText.companyWizard.contracts.managedByWeFixTeam}</span>
-              </label>
-            </Container>
+            <select
+              className={styles.select}
+              onChange={(e) => handleInputChange('managedByLookupId', e.target.value)}
+              value={formData.managedByLookupId}
+            >
+              <option value="">{appText.companyWizard.contracts.selectManagedBy}</option>
+              {managedBy.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
           </Container>
         </Container>
 
