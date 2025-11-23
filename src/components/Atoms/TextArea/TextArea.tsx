@@ -1,13 +1,22 @@
 import React from 'react';
 import styles from './Textarea.module.css';
 
-const Textarea = ({ name, onChange, placeholder, value, }) => (
+interface TextAreaProps {
+  name: string;
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  placeholder?: string;
+  rows?: number;
+  value: string;
+}
+
+const Textarea = ({ name, onChange, placeholder, rows, value }: TextAreaProps) => (
   <textarea
     className={styles.textarea}
     name={name}
-    value={value}
-    placeholder={placeholder}
     onChange={onChange}
+    placeholder={placeholder}
+    rows={rows}
+    value={value}
   />
 );
 

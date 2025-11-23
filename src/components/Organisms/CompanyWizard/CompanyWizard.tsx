@@ -55,6 +55,13 @@ interface Contract {
   id: string;
 }
 
+interface Branch {
+  branchNameArabic: string | null;
+  branchNameEnglish: string | null;
+  branchTitle: string;
+  id: string;
+}
+
 interface CompanyWizardProps {
   onClose: () => void;
 }
@@ -68,6 +75,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
   const [businessModels, setBusinessModels] = useState<BusinessModel[]>([]);
   const [managedBy, setManagedBy] = useState<ManagedBy[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     companyTitle: '',
@@ -115,6 +123,12 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     representativeEmailAddress: '',
     teamLeaderId: '',
     branchIsActive: true,
+    // Zones data
+    zoneTitle: '',
+    zoneNumber: '',
+    zoneDescription: '',
+    branchId: '',
+    zoneIsActive: true,
   });
 
   const steps = [
@@ -311,6 +325,18 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
 
     fetchContracts();
   }, []);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      // For now, branches will be fetched after company is created
+      // This is a placeholder - in a real scenario, you'd need the companyId
+      // For now, we'll handle branches locally or fetch them when company is created
+    };
+
+    if (currentStep === 5) {
+      fetchBranches();
+    }
+  }, [currentStep]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -1213,6 +1239,102 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     </Container>
   );
 
+  const renderZones = () => (
+    <Container className={styles.stepContent}>
+      <Heading className={styles.sectionTitle} level="3">
+        {appText.companyWizard.zones.title}
+      </Heading>
+
+      <Form className={styles.form} onSubmit={handleFormSubmit}>
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.zones.branch} <span className={styles.required}>*</span>
+            </label>
+            <select
+              className={styles.select}
+              onChange={(e) => handleInputChange('branchId', e.target.value)}
+              value={formData.branchId}
+            >
+              <option value="">{appText.companyWizard.zones.selectBranch}</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.branchTitle} {branch.branchNameEnglish ? `(${branch.branchNameEnglish})` : ''}
+                </option>
+              ))}
+            </select>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.zones.zoneTitle} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="zoneTitle"
+              onChange={(e) => handleInputChange('zoneTitle', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.zones.zoneTitlePlaceholder}
+              title=""
+              type="text"
+              value={formData.zoneTitle}
+            />
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.zones.zoneNumber}
+            </label>
+            <InputField
+              name="zoneNumber"
+              onChange={(e) => handleInputChange('zoneNumber', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.zones.zoneNumberPlaceholder}
+              title=""
+              type="text"
+              value={formData.zoneNumber}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.zones.zoneDescription}
+            </label>
+            <TextArea
+              name="zoneDescription"
+              onChange={(e) => handleInputChange('zoneDescription', e.target.value)}
+              placeholder={appText.companyWizard.zones.zoneDescriptionPlaceholder}
+              rows={4}
+              value={formData.zoneDescription}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>{appText.companyWizard.zones.isActive}</label>
+            <Container className={styles.toggleContainer}>
+              <label className={styles.toggleLabel}>
+                <input
+                  checked={formData.zoneIsActive}
+                  className={styles.toggleInput}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, zoneIsActive: e.target.checked }))}
+                  type="checkbox"
+                />
+                <span className={`${styles.toggleSlider} ${formData.zoneIsActive ? styles.toggleActive : ''}`}></span>
+                <span className={styles.toggleText}>
+                  {formData.zoneIsActive ? appText.companyWizard.zones.active : appText.companyWizard.zones.inactive}
+                </span>
+              </label>
+            </Container>
+          </Container>
+        </Container>
+      </Form>
+    </Container>
+  );
+
   return (
     <Container className={styles.modalOverlay} onClick={onClose}>
       <Container className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -1246,6 +1368,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
         {currentStep === 2 && renderContracts()}
         {currentStep === 3 && renderUserRoles()}
         {currentStep === 4 && renderBranches()}
+        {currentStep === 5 && renderZones()}
 
         <Container className={styles.modalFooter}>
           <Button className={styles.cancelButton} onClick={onClose} type="button">
