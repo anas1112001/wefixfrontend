@@ -49,11 +49,6 @@ interface ManagedBy {
   nameArabic: string | null;
 }
 
-interface Contract {
-  contractReference: string;
-  contractTitle: string;
-  id: string;
-}
 
 interface Branch {
   branchNameArabic: string | null;
@@ -74,8 +69,23 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
   const [teamLeaders, setTeamLeaders] = useState<TeamLeader[]>([]);
   const [businessModels, setBusinessModels] = useState<BusinessModel[]>([]);
   const [managedBy, setManagedBy] = useState<ManagedBy[]>([]);
-  const [contracts, setContracts] = useState<Contract[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+
+interface MainService {
+  id: string;
+  name: string;
+  nameArabic: string | null;
+}
+
+interface SubService {
+  id: string;
+  name: string;
+  nameArabic: string | null;
+}
+
+  const [mainServices, setMainServices] = useState<MainService[]>([]);
+  const [subServices, setSubServices] = useState<SubService[]>([]);
+  const [maintenanceServices, setMaintenanceServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     companyTitle: '',
@@ -87,7 +97,6 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     hoLocation: '',
     logo: null as File | null,
     // Contract data
-    contractId: '',
     contractReference: '',
     contractTitle: '',
     businessModelLookupId: '',
@@ -114,6 +123,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     mobileNumber: '',
     email: '',
     userDescription: '',
+    userRolesTeamLeaderId: '', // Team Leader from User Roles step (readonly)
     // Branches data
     branchTitle: '',
     branchNameArabic: '',
@@ -129,6 +139,9 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     zoneDescription: '',
     branchId: '',
     zoneIsActive: true,
+    // Maintenance Services data
+    mainServiceId: '',
+    subServiceId: '',
   });
 
   const steps = [
@@ -138,8 +151,58 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     { number: 4, label: appText.companyWizard.steps.branches },
     { number: 5, label: appText.companyWizard.steps.zones },
     { number: 6, label: appText.companyWizard.steps.maintenanceServices },
-    { number: 7, label: appText.companyWizard.steps.workingHours },
   ];
+
+  const fetchSubServicesByMainServiceId = async (mainServiceId: string) => {
+    try {
+      const queryString = `
+        query GetSubServicesByMainServiceId($mainServiceId: String!) {
+          subServices: getActiveSubServicesByMainServiceId(mainServiceId: $mainServiceId) {
+            id
+            name
+            nameArabic
+          }
+        }
+      `;
+
+      const response = await fetch(GRAPHQL_ENDPOINT, {
+        body: JSON.stringify({
+          query: queryString,
+          variables: {
+            mainServiceId,
+          },
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('HTTP error:', response.status, response.statusText);
+        console.error('Response data:', JSON.stringify(data, null, 2));
+
+        return;
+      }
+
+      if (data.errors) {
+        console.error('GraphQL errors:', JSON.stringify(data.errors, null, 2));
+
+        return;
+      }
+
+      if (data.data?.subServices) {
+        setSubServices(data.data.subServices);
+        console.log('Sub services loaded:', data.data.subServices.length);
+      } else {
+        console.warn('No sub services data received:', data);
+      }
+    } catch (error) {
+      console.error('Error fetching sub services:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchLookups = async () => {
@@ -181,6 +244,11 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
               name
               nameArabic
               isDefault
+            }
+            mainServices: getActiveMainServices {
+              id
+              name
+              nameArabic
             }
           }
         `;
@@ -279,6 +347,13 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
         } else {
           console.warn('No managed by data received');
         }
+
+        if (lookupsData.data?.mainServices) {
+          setMainServices(lookupsData.data.mainServices);
+          console.log('Main services loaded:', lookupsData.data.mainServices.length);
+        } else {
+          console.warn('No main services data received');
+        }
       } catch (error) {
         console.error('Error fetching lookups:', error);
       } finally {
@@ -289,42 +364,6 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     fetchLookups();
   }, []);
 
-  useEffect(() => {
-    const fetchContracts = async () => {
-      try {
-        const response = await fetch(GRAPHQL_ENDPOINT, {
-          body: JSON.stringify({
-            query: `
-              query GetContracts {
-                getContracts(filter: { limit: 100, page: 1 }) {
-                  contracts {
-                    id
-                    contractReference
-                    contractTitle
-                  }
-                }
-              }
-            `,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        });
-
-        const payload = await response.json();
-
-        if (payload.data?.getContracts?.contracts) {
-          setContracts(payload.data.getContracts.contracts);
-          console.log('Contracts loaded:', payload.data.getContracts.contracts.length);
-        }
-      } catch (error) {
-        console.error('Error fetching contracts:', error);
-      }
-    };
-
-    fetchContracts();
-  }, []);
 
   useEffect(() => {
     const fetchBranches = async () => {
@@ -338,22 +377,39 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     }
   }, [currentStep]);
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  // Sync team leader from User Roles to Branches when entering Branches step
+  useEffect(() => {
+    if (currentStep === 4 && formData.userRolesTeamLeaderId && !formData.teamLeaderId) {
+      const updatedTeamLeaderId = formData.userRolesTeamLeaderId;
 
-  const handleContractChange = (contractId: string) => {
-    const selectedContract = contracts.find((c) => c.id === contractId);
-
-    if (selectedContract) {
-      setFormData((prev) => ({
-        ...prev,
-        contractId: selectedContract.id,
-        contractReference: selectedContract.contractReference,
-        contractTitle: selectedContract.contractTitle,
-      }));
+      setFormData((prev) => ({ ...prev, teamLeaderId: updatedTeamLeaderId }));
     }
+  }, [currentStep, formData.userRolesTeamLeaderId, formData.teamLeaderId]);
+
+  // When entering Zones step, ensure branch data from step 4 is available
+  useEffect(() => {
+    if (currentStep === 5 && formData.branchTitle) {
+      // Branch from step 4 is ready to be used
+      // The branchId will be set when the branch is actually created
+    }
+  }, [currentStep, formData.branchTitle]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => {
+      const updated = { ...prev, [field]: value };
+
+      // When user role is selected, auto-set first team leader if not already set
+      if (field === 'userRoleId' && value && !updated.userRolesTeamLeaderId && teamLeaders.length > 0) {
+        const firstTeamLeader = teamLeaders[0];
+
+        updated.userRolesTeamLeaderId = firstTeamLeader.id;
+        updated.teamLeaderId = firstTeamLeader.id;
+      }
+
+      return updated;
+    });
   };
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -579,58 +635,19 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
         <Container className={styles.formRow}>
           <Container className={styles.formField}>
             <label className={styles.label}>
-              <i className="fas fa-clipboard" style={{ marginRight: '8px' }}></i>
-              {appText.companyWizard.contracts.contractReference} <span className={styles.required}>*</span>
+              {appText.companyWizard.contracts.contractTitle} <span className={styles.required}>*</span>
             </label>
-            <select
-              className={styles.select}
-              onChange={(e) => handleContractChange(e.target.value)}
-              required
-              value={formData.contractId}
-            >
-              <option value="">{appText.companyWizard.contracts.selectContract || 'Select Contract'}</option>
-              {contracts.map((contract) => (
-                <option key={contract.id} value={contract.id}>
-                  {contract.contractReference} - {contract.contractTitle}
-                </option>
-              ))}
-            </select>
+            <InputField
+              name="contractTitle"
+              onChange={(e) => handleInputChange('contractTitle', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.contracts.contractTitlePlaceholder || 'Enter contract title'}
+              title=""
+              type="text"
+              value={formData.contractTitle}
+            />
           </Container>
         </Container>
-
-        {formData.contractId && (
-          <Container className={styles.formRow}>
-            <Container className={styles.formField}>
-              <label className={styles.label}>
-                {appText.companyWizard.contracts.contractTitle}
-              </label>
-              <input
-                className={styles.inputField}
-                name="contractTitle"
-                readOnly
-                title=""
-                type="text"
-                value={formData.contractTitle}
-              />
-              <Paragraph className={styles.helperText}>
-                {appText.companyWizard.contracts.autoGenerated || 'Auto-filled from selected contract'}
-              </Paragraph>
-            </Container>
-            <Container className={styles.formField}>
-              <label className={styles.label}>
-                {appText.companyWizard.contracts.contractReference}
-              </label>
-              <input
-                className={styles.inputField}
-                name="contractReference"
-                readOnly
-                title=""
-                type="text"
-                value={formData.contractReference}
-              />
-            </Container>
-          </Container>
-        )}
 
         <Container className={styles.formRow}>
           <Container className={styles.formField}>
@@ -947,27 +964,6 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
           <Container className={styles.formField}>
             <label className={styles.label}>
               <i className="fas fa-user" style={{ marginRight: '8px' }}></i>
-              {appText.companyWizard.userRoles.userRole} <span className={styles.required}>*</span>
-            </label>
-            <select
-              className={styles.select}
-              onChange={(e) => handleInputChange('userRoleId', e.target.value)}
-              value={formData.userRoleId}
-            >
-              <option value="">{appText.companyWizard.userRoles.selectUserRole}</option>
-              {userRoles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
-          </Container>
-        </Container>
-
-        <Container className={styles.formRow}>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              <i className="fas fa-user" style={{ marginRight: '8px' }}></i>
               {appText.companyWizard.userRoles.fullNameAr} <span className={styles.required}>*</span>
             </label>
             <InputField
@@ -1075,6 +1071,30 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
               type="email"
               value={formData.email}
             />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-user-tie" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.userRoles.teamLeaderReadonly}
+            </label>
+            <select
+              className={styles.select}
+              disabled
+              value={formData.userRolesTeamLeaderId}
+            >
+              <option value="">{appText.companyWizard.branches.selectTeamLeader}</option>
+              {teamLeaders.map((leader) => (
+                <option key={leader.id} value={leader.id}>
+                  {leader.name}
+                </option>
+              ))}
+            </select>
+            <Paragraph className={styles.helperText}>
+              This team leader will be used for all branches
+            </Paragraph>
           </Container>
         </Container>
 
@@ -1206,8 +1226,8 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
             </label>
             <select
               className={styles.select}
-              onChange={(e) => handleInputChange('teamLeaderId', e.target.value)}
-              value={formData.teamLeaderId}
+              disabled
+              value={formData.userRolesTeamLeaderId || formData.teamLeaderId}
             >
               <option value="">{appText.companyWizard.branches.selectTeamLeader}</option>
               {teamLeaders.map((leader) => (
@@ -1216,6 +1236,9 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
                 </option>
               ))}
             </select>
+            <Paragraph className={styles.helperText}>
+              Team leader is set from User Roles step
+            </Paragraph>
           </Container>
           <Container className={styles.formField}>
             <label className={styles.label}>{appText.companyWizard.branches.isActive}</label>
@@ -1239,32 +1262,33 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     </Container>
   );
 
-  const renderZones = () => (
-    <Container className={styles.stepContent}>
-      <Heading className={styles.sectionTitle} level="3">
-        {appText.companyWizard.zones.title}
-      </Heading>
+  const renderZones = () => {
+    const branchDisplayName = formData.branchNameEnglish || formData.branchTitle || 'Branch from Step 4';
 
-      <Form className={styles.form} onSubmit={handleFormSubmit}>
-        <Container className={styles.formRow}>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              {appText.companyWizard.zones.branch} <span className={styles.required}>*</span>
-            </label>
-            <select
-              className={styles.select}
-              onChange={(e) => handleInputChange('branchId', e.target.value)}
-              value={formData.branchId}
-            >
-              <option value="">{appText.companyWizard.zones.selectBranch}</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.branchTitle} {branch.branchNameEnglish ? `(${branch.branchNameEnglish})` : ''}
-                </option>
-              ))}
-            </select>
+    return (
+      <Container className={styles.stepContent}>
+        <Heading className={styles.sectionTitle} level="3">
+          {appText.companyWizard.zones.title}
+        </Heading>
+
+        <Form className={styles.form} onSubmit={handleFormSubmit}>
+          <Container className={styles.formRow}>
+            <Container className={styles.formField}>
+              <label className={styles.label}>
+                {appText.companyWizard.zones.branch} <span className={styles.required}>*</span>
+              </label>
+              <input
+                className={styles.select}
+                readOnly
+                type="text"
+                value={branchDisplayName}
+              />
+              <Paragraph className={styles.helperText}>
+                Using branch created in Step 4: {formData.branchTitle}
+                {formData.branchNameEnglish && ` (${formData.branchNameEnglish})`}
+              </Paragraph>
+            </Container>
           </Container>
-        </Container>
 
         <Container className={styles.formRow}>
           <Container className={styles.formField}>
@@ -1331,6 +1355,145 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
             </Container>
           </Container>
         </Container>
+        </Form>
+      </Container>
+    );
+  };
+
+  const handleAddMaintenanceService = () => {
+    if (!formData.mainServiceId || !formData.subServiceId) {
+      return;
+    }
+
+    const mainService = mainServices.find((s) => s.id === formData.mainServiceId);
+    const subService = subServices.find((s) => s.id === formData.subServiceId);
+
+    if (mainService && subService) {
+      const newService = {
+        id: `temp-${Date.now()}`,
+        mainService,
+        mainServiceId: mainService.id,
+        subService,
+        subServiceId: subService.id,
+      };
+
+      setMaintenanceServices((prev) => [...prev, newService]);
+      setFormData((prev) => ({ ...prev, mainServiceId: '', subServiceId: '' }));
+    }
+  };
+
+  const handleDeleteMaintenanceService = (id: string) => {
+    setMaintenanceServices((prev) => prev.filter((service) => service.id !== id));
+  };
+
+  const renderMaintenanceServices = () => (
+    <Container className={styles.stepContent}>
+      <Heading className={styles.sectionTitle} level="3">
+        {appText.companyWizard.maintenanceServices.title}
+      </Heading>
+
+      <Form className={styles.form} onSubmit={handleFormSubmit}>
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.maintenanceServices.mainService} <span className={styles.required}>*</span>
+            </label>
+            <select
+              className={styles.select}
+              onChange={async (e) => {
+                handleInputChange('mainServiceId', e.target.value);
+                // Fetch sub services for selected main service
+
+                if (e.target.value) {
+                  await fetchSubServicesByMainServiceId(e.target.value);
+                } else {
+                  setSubServices([]);
+                }
+
+                setFormData((prev) => ({ ...prev, subServiceId: '' }));
+              }}
+              value={formData.mainServiceId}
+            >
+              <option value="">{appText.companyWizard.maintenanceServices.mainServicePlaceholder}</option>
+              {mainServices.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name} {service.nameArabic ? `(${service.nameArabic})` : ''}
+                </option>
+              ))}
+            </select>
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.maintenanceServices.subService} <span className={styles.required}>*</span>
+            </label>
+            <select
+              className={styles.select}
+              disabled={!formData.mainServiceId}
+              onChange={(e) => handleInputChange('subServiceId', e.target.value)}
+              value={formData.subServiceId}
+            >
+              <option value="">{appText.companyWizard.maintenanceServices.subServicePlaceholder}</option>
+              {subServices.map((service) => (
+                <option key={service.id} value={service.id}>
+                  {service.name} {service.nameArabic ? `(${service.nameArabic})` : ''}
+                </option>
+              ))}
+            </select>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <Button className={styles.addButton} onClick={handleAddMaintenanceService} type="button">
+              {appText.companyWizard.maintenanceServices.add}
+            </Button>
+          </Container>
+        </Container>
+
+        <Container className={styles.tableContainer}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>{appText.companyWizard.maintenanceServices.table.id}</th>
+                <th>{appText.companyWizard.maintenanceServices.table.mainCategoryTitle}</th>
+                <th>{appText.companyWizard.maintenanceServices.table.subCategoryTitle}</th>
+                <th>{appText.companyWizard.maintenanceServices.table.delete}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {maintenanceServices.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className={styles.emptyMessage}>
+                    {appText.companyWizard.maintenanceServices.noServices}
+                  </td>
+                </tr>
+              ) : (
+                maintenanceServices.map((service) => (
+                  <tr key={service.id}>
+                    <td>{service.id}</td>
+                    <td>
+                      {service.mainService?.name || ''}
+                      {service.mainService?.nameArabic && ` / ${service.mainService.nameArabic}`}
+                    </td>
+                    <td>
+                      {service.subService?.name || ''}
+                      {service.subService?.nameArabic && ` / ${service.subService.nameArabic}`}
+                    </td>
+                    <td>
+                      <Button
+                        className={styles.deleteButton}
+                        onClick={() => handleDeleteMaintenanceService(service.id)}
+                        type="button"
+                      >
+                        <i className="fas fa-trash"></i>
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </Container>
       </Form>
     </Container>
   );
@@ -1369,6 +1532,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
         {currentStep === 3 && renderUserRoles()}
         {currentStep === 4 && renderBranches()}
         {currentStep === 5 && renderZones()}
+        {currentStep === 6 && renderMaintenanceServices()}
 
         <Container className={styles.modalFooter}>
           <Button className={styles.cancelButton} onClick={onClose} type="button">

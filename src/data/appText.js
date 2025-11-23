@@ -318,6 +318,8 @@ export const appText = {
       emailAddressPlaceholder: 'user@example.com',
       description: 'Description',
       descriptionPlaceholder: 'Enter user description',
+      teamLeader: 'Team Leader',
+      teamLeaderReadonly: 'Team Leader (Auto-assigned)',
     },
     branches: {
       title: 'Add Main Branch',
@@ -352,6 +354,21 @@ export const appText = {
       isActive: 'Is Active',
       active: 'Active',
       inactive: 'Inactive',
+    },
+    maintenanceServices: {
+      title: 'Maintenance Services',
+      mainService: 'Main Service',
+      mainServicePlaceholder: 'Search or select Main Service...',
+      subService: 'Sub Service',
+      subServicePlaceholder: 'Search or select Sub Service...',
+      add: 'Add',
+      table: {
+        id: 'Id',
+        mainCategoryTitle: 'Main Category Title (En-Ar)',
+        subCategoryTitle: 'Sub Category Title (En-Ar)',
+        delete: 'Delete',
+      },
+      noServices: 'No maintenance services added yet',
     },
     buttons: {
       cancel: 'Cancel',
