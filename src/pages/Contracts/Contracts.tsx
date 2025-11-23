@@ -9,8 +9,7 @@ import Sidebar from 'components/Molecules/Sidebar/Sidebar';
 import { appText } from 'data/appText';
 import styles from './Contracts.module.css';
 import AddContractModal from './AddContractModal';
-
-const GRAPHQL_ENDPOINT = process.env.REACT_APP_API_URL ?? 'http://localhost:4000/graphql';
+import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
 
 interface Company {
   id: string;

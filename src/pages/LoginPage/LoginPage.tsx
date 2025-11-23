@@ -12,8 +12,7 @@ import SecureStorage from 'modules/secureStorage';
 import { appText } from 'data/appText';
 // import { ForgotPasswordModal } from './ForgotPasswordModal';
 import styles from './LoginPage.module.css';
-
-const GRAPHQL_ENDPOINT = process.env.REACT_APP_API_URL ?? 'http://localhost:4000/graphql';
+import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
 
 type LoginStatus = {
   error?: string;

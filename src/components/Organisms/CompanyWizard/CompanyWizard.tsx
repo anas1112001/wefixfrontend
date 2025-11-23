@@ -9,8 +9,7 @@ import Button from 'components/Atoms/Button/Button';
 import Form from 'components/Atoms/Form/Form';
 import { appText } from 'data/appText';
 import styles from './CompanyWizard.module.css';
-
-const GRAPHQL_ENDPOINT = process.env.REACT_APP_API_URL ?? 'http://localhost:4000/graphql';
+import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
 
 interface Country {
   code: string | null;

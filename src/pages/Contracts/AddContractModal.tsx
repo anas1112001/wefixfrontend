@@ -7,8 +7,7 @@ import InputField from 'components/Atoms/InputField/InputField';
 import Button from 'components/Atoms/Button/Button';
 import { appText } from 'data/appText';
 import styles from './AddContractModal.module.css';
-
-const GRAPHQL_ENDPOINT = process.env.REACT_APP_API_URL ?? 'http://localhost:4000/graphql';
+import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
 
 interface Company {
   id: string;

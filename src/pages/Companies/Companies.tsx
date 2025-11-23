@@ -10,8 +10,7 @@ import Sidebar from 'components/Molecules/Sidebar/Sidebar';
 import CompanyWizard from 'components/Organisms/CompanyWizard/CompanyWizard';
 import { appText } from 'data/appText';
 import styles from './Companies.module.css';
-
-const GRAPHQL_ENDPOINT = process.env.REACT_APP_API_URL ?? 'http://localhost:4000/graphql';
+import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
 
 interface Lookup {
   id: string;
