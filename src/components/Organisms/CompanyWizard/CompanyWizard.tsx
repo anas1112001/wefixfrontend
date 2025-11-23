@@ -41,6 +41,24 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     hoAddress: '',
     hoLocation: '',
     logo: null as File | null,
+    // Contract data
+    contractReference: '',
+    contractTitle: '',
+    businessModel: 'B2B',
+    managedBy: 'WeFix Team',
+    ticketShortCode: '',
+    isActive: true,
+    numberOfOwner: 1,
+    numberOfTeamLeader: 1,
+    numberOfBranch: 1,
+    numberOfPreventiveTickets: 1,
+    numberOfCorrectiveTickets: 1,
+    numberOfEmergencyTickets: 1,
+    contractStartDate: '',
+    contractEndDate: '',
+    contractFiles: [] as File[],
+    contractDescription: '',
+    contractValue: '',
   });
 
   const steps = [
@@ -129,6 +147,36 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     }
   };
 
+  const handleContractFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+
+    if (files) {
+      setFormData((prev) => ({ ...prev, contractFiles: Array.from(files) }));
+    }
+  };
+
+  const handleNumberChange = (field: string, delta: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: Math.max(0, (prev[field as keyof typeof prev] as number) + delta),
+    }));
+  };
+
+  useEffect(() => {
+    if (currentStep === 2 && !formData.contractReference && formData.companyTitle) {
+      const shortName = formData.companyTitle.substring(0, 2).toUpperCase();
+      const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+      const contractRef = `CNT-${shortName}-${randomNum}`;
+      const ticketCode = `TKT-${shortName}-0003`;
+
+      setFormData((prev) => ({
+        ...prev,
+        contractReference: contractRef,
+        ticketShortCode: ticketCode,
+      }));
+    }
+  }, [currentStep, formData.companyTitle, formData.contractReference]);
+
   const handleNext = () => {
     if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
@@ -138,6 +186,12 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
   const handlePrevious = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleStepClick = (stepNumber: number) => {
+    if (stepNumber >= 1 && stepNumber <= steps.length) {
+      setCurrentStep(stepNumber);
     }
   };
 
@@ -291,6 +345,372 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
     </Container>
   );
 
+  const renderContracts = () => (
+    <Container className={styles.stepContent}>
+      <Heading className={styles.sectionTitle} level="3">
+        {appText.companyWizard.contracts.title}
+      </Heading>
+
+      <Form className={styles.form} onSubmit={handleFormSubmit}>
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-clipboard" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.contracts.contractReference}
+            </label>
+            <InputField
+              name="contractReference"
+              onChange={(e) => handleInputChange('contractReference', e.target.value)}
+              pattern={undefined}
+              placeholder="CNT-101"
+              title=""
+              type="text"
+              value={formData.contractReference}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.contracts.contractTitle}
+            </label>
+            <InputField
+              name="contractTitle"
+              onChange={(e) => handleInputChange('contractTitle', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.contracts.contractTitlePlaceholder}
+              title=""
+              type="text"
+              value={formData.contractTitle}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.contracts.businessModel} <span className={styles.required}>*</span>
+            </label>
+            <Container className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  checked={formData.businessModel === 'B2B'}
+                  className={styles.radioInput}
+                  name="businessModel"
+                  onChange={() => handleInputChange('businessModel', 'B2B')}
+                  type="radio"
+                />
+                <span>{appText.companyWizard.contracts.businessModelB2B}</span>
+              </label>
+              <label className={styles.radioLabel}>
+                <input
+                  checked={formData.businessModel === 'White Label'}
+                  className={styles.radioInput}
+                  name="businessModel"
+                  onChange={() => handleInputChange('businessModel', 'White Label')}
+                  type="radio"
+                />
+                <span>{appText.companyWizard.contracts.businessModelWhiteLabel}</span>
+              </label>
+            </Container>
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.contracts.managedBy} <span className={styles.required}>*</span>
+            </label>
+            <Container className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  checked={formData.managedBy === 'Client Team'}
+                  className={styles.radioInput}
+                  name="managedBy"
+                  onChange={() => handleInputChange('managedBy', 'Client Team')}
+                  type="radio"
+                />
+                <span>{appText.companyWizard.contracts.managedByClientTeam}</span>
+              </label>
+              <label className={styles.radioLabel}>
+                <input
+                  checked={formData.managedBy === 'WeFix Team'}
+                  className={styles.radioInput}
+                  name="managedBy"
+                  onChange={() => handleInputChange('managedBy', 'WeFix Team')}
+                  type="radio"
+                />
+                <span>{appText.companyWizard.contracts.managedByWeFixTeam}</span>
+              </label>
+            </Container>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.contracts.ticketShortCode} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="ticketShortCode"
+              onChange={(e) => handleInputChange('ticketShortCode', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.contracts.ticketShortCodePlaceholder}
+              title=""
+              type="text"
+              value={formData.ticketShortCode}
+            />
+            <Paragraph className={styles.helperText}>
+              {appText.companyWizard.contracts.ticketShortCodeHelper}
+            </Paragraph>
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>{appText.companyWizard.contracts.isActive}</label>
+            <Container className={styles.toggleContainer}>
+              <label className={styles.toggleLabel}>
+                <input
+                  checked={formData.isActive}
+                  className={styles.toggleInput}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, isActive: e.target.checked }))}
+                  type="checkbox"
+                />
+                <span className={`${styles.toggleSlider} ${formData.isActive ? styles.toggleActive : ''}`}></span>
+                <span className={styles.toggleText}>
+                  {formData.isActive ? appText.companyWizard.contracts.active : appText.companyWizard.contracts.inactive}
+                </span>
+              </label>
+            </Container>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.numberCounter}>
+            <label className={styles.label}>{appText.companyWizard.contracts.numberOfOwner}</label>
+            <Container className={styles.counterControls}>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfOwner', -1)}
+                type="button"
+              >
+                -
+              </Button>
+              <span className={styles.counterValue}>{formData.numberOfOwner}</span>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfOwner', 1)}
+                type="button"
+              >
+                +
+              </Button>
+            </Container>
+          </Container>
+          <Container className={styles.numberCounter}>
+            <label className={styles.label}>{appText.companyWizard.contracts.numberOfTeamLeader}</label>
+            <Container className={styles.counterControls}>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfTeamLeader', -1)}
+                type="button"
+              >
+                -
+              </Button>
+              <span className={styles.counterValue}>{formData.numberOfTeamLeader}</span>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfTeamLeader', 1)}
+                type="button"
+              >
+                +
+              </Button>
+            </Container>
+          </Container>
+          <Container className={styles.numberCounter}>
+            <label className={styles.label}>{appText.companyWizard.contracts.numberOfBranch}</label>
+            <Container className={styles.counterControls}>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfBranch', -1)}
+                type="button"
+              >
+                -
+              </Button>
+              <span className={styles.counterValue}>{formData.numberOfBranch}</span>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfBranch', 1)}
+                type="button"
+              >
+                +
+              </Button>
+            </Container>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.numberCounter}>
+            <label className={styles.label}>{appText.companyWizard.contracts.numberOfPreventiveTickets}</label>
+            <Container className={styles.counterControls}>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfPreventiveTickets', -1)}
+                type="button"
+              >
+                -
+              </Button>
+              <span className={styles.counterValue}>{formData.numberOfPreventiveTickets}</span>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfPreventiveTickets', 1)}
+                type="button"
+              >
+                +
+              </Button>
+            </Container>
+          </Container>
+          <Container className={styles.numberCounter}>
+            <label className={styles.label}>{appText.companyWizard.contracts.numberOfCorrectiveTickets}</label>
+            <Container className={styles.counterControls}>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfCorrectiveTickets', -1)}
+                type="button"
+              >
+                -
+              </Button>
+              <span className={styles.counterValue}>{formData.numberOfCorrectiveTickets}</span>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfCorrectiveTickets', 1)}
+                type="button"
+              >
+                +
+              </Button>
+            </Container>
+          </Container>
+          <Container className={styles.numberCounter}>
+            <label className={styles.label}>{appText.companyWizard.contracts.numberOfEmergencyTickets}</label>
+            <Container className={styles.counterControls}>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfEmergencyTickets', -1)}
+                type="button"
+              >
+                -
+              </Button>
+              <span className={styles.counterValue}>{formData.numberOfEmergencyTickets}</span>
+              <Button
+                className={styles.counterButton}
+                onClick={() => handleNumberChange('numberOfEmergencyTickets', 1)}
+                type="button"
+              >
+                +
+              </Button>
+            </Container>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-calendar" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.contracts.contractStartDate} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="contractStartDate"
+              onChange={(e) => handleInputChange('contractStartDate', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.contracts.datePlaceholder}
+              title=""
+              type="date"
+              value={formData.contractStartDate}
+            />
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-calendar" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.contracts.contractEndDate} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="contractEndDate"
+              onChange={(e) => handleInputChange('contractEndDate', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.contracts.datePlaceholder}
+              title=""
+              type="date"
+              value={formData.contractEndDate}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <Heading className={styles.sectionSubtitle} level="4">
+              <i className="fas fa-file-alt" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.contracts.contractFiles}
+            </Heading>
+            <Container className={styles.fileUpload}>
+              <input
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                className={styles.fileInput}
+                id="contract-files-upload"
+                multiple
+                onChange={handleContractFilesChange}
+                type="file"
+              />
+              <label className={styles.fileLabel} htmlFor="contract-files-upload">
+                <i className="fas fa-cloud-upload-alt" style={{ fontSize: '32px', marginBottom: '8px' }}></i>
+                <Paragraph>{appText.companyWizard.contracts.contractFilesPlaceholder}</Paragraph>
+              </label>
+            </Container>
+            <Paragraph className={styles.helperText}>
+              {appText.companyWizard.contracts.contractFilesHelper}
+            </Paragraph>
+            {formData.contractFiles.length > 0 && (
+              <Container className={styles.fileList}>
+                {formData.contractFiles.map((file, index) => (
+                  <Paragraph key={index} className={styles.fileName}>
+                    {file.name}
+                  </Paragraph>
+                ))}
+              </Container>
+            )}
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <Heading className={styles.sectionSubtitle} level="4">
+              <i className="fas fa-pencil-alt" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.contracts.contractDescription}
+            </Heading>
+            <TextArea
+              name="contractDescription"
+              onChange={(e) => handleInputChange('contractDescription', e.target.value)}
+              placeholder={appText.companyWizard.contracts.contractDescriptionPlaceholder}
+              value={formData.contractDescription}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <Heading className={styles.sectionSubtitle} level="4">
+              <i className="fas fa-dollar-sign" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.contracts.contractValue}
+            </Heading>
+            <InputField
+              name="contractValue"
+              onChange={(e) => handleInputChange('contractValue', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.contracts.contractValuePlaceholder}
+              title=""
+              type="text"
+              value={formData.contractValue}
+            />
+          </Container>
+        </Container>
+      </Form>
+    </Container>
+  );
+
   return (
     <Container className={styles.modalOverlay} onClick={onClose}>
       <Container className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -305,7 +725,11 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
 
         <Container className={styles.progressIndicator}>
           {steps.map((step) => (
-            <Container key={step.number} className={styles.stepIndicator}>
+            <Container
+              key={step.number}
+              className={styles.stepIndicator}
+              onClick={() => handleStepClick(step.number)}
+            >
               <Container
                 className={`${styles.stepCircle} ${currentStep === step.number ? styles.active : ''} ${currentStep > step.number ? styles.completed : ''}`}
               >
@@ -317,6 +741,7 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
         </Container>
 
         {currentStep === 1 && renderBasicInfo()}
+        {currentStep === 2 && renderContracts()}
 
         <Container className={styles.modalFooter}>
           <Button className={styles.cancelButton} onClick={onClose} type="button">
