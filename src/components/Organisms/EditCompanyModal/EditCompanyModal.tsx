@@ -110,8 +110,8 @@ const EditCompanyModal: FC<EditCompanyModalProps> = ({ company, onClose, onSucce
       const response = await fetch(GRAPHQL_ENDPOINT, {
         body: JSON.stringify({
           query: `
-            mutation UpdateCompany($id: String!, $companyData: UpdateCompanyInput!) {
-              updateCompany(id: $id, companyData: $companyData) {
+            mutation UpdateCompany($id: String!, $updateCompanyData: UpdateCompanyInput!) {
+              updateCompany(id: $id, updateCompanyData: $updateCompanyData) {
                 company {
                   id
                   title
@@ -122,7 +122,7 @@ const EditCompanyModal: FC<EditCompanyModalProps> = ({ company, onClose, onSucce
           `,
           variables: {
             id: company.id,
-            companyData: {
+            updateCompanyData: {
               title: formData.companyTitle,
               companyNameArabic: formData.companyNameArabic || null,
               companyNameEnglish: formData.companyNameEnglish || null,

@@ -12,7 +12,7 @@ import EditCompanyModal from 'components/Organisms/EditCompanyModal/EditCompanyM
 import AddUserModal from 'components/Organisms/AddUserModal/AddUserModal';
 import AddBranchModal from 'components/Organisms/AddBranchModal/AddBranchModal';
 import AddZoneModal from 'components/Organisms/AddZoneModal/AddZoneModal';
-import ManageManagersModal from 'components/Organisms/ManageManagersModal/ManageManagersModal';
+import ManageServicesModal from 'components/Organisms/ManageServicesModal/ManageServicesModal';
 import { appText } from 'data/appText';
 import styles from './Companies.module.css';
 import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
@@ -42,7 +42,7 @@ interface CompaniesData {
   totalPages: number;
 }
 
-type CompanyAction = 'edit' | 'addUser' | 'addBranch' | 'addZone' | 'manageManagers';
+type CompanyAction = 'edit' | 'addUser' | 'addBranch' | 'addZone' | 'manageServices';
 
 const Companies: FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -71,6 +71,70 @@ const Companies: FC = () => {
 
   const handleModalSuccess = () => {
     fetchCompanies();
+  };
+
+  const handleDeleteCompany = async (company: Company) => {
+    const confirmation = await Swal.fire({
+      icon: 'warning',
+      title: appText.companies.deleteDialog.title,
+      text: appText.companies.deleteDialog.message.replace('{title}', company.title),
+      showCancelButton: true,
+      confirmButtonText: appText.companies.deleteDialog.confirm,
+      cancelButtonText: appText.companies.deleteDialog.cancel,
+      reverseButtons: true,
+    });
+
+    if (!confirmation.isConfirmed) {
+      return;
+    }
+
+    try {
+      const response = await fetch(GRAPHQL_ENDPOINT, {
+        body: JSON.stringify({
+          query: `
+            mutation DeleteCompany($id: String!) {
+              deleteCompany(id: $id)
+            }
+          `,
+          variables: { id: company.id },
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        method: 'POST',
+      });
+
+      const payload = await response.json();
+      
+      if (payload.errors?.length || payload.data?.deleteCompany !== true) {
+        const errorMessage = payload.errors?.[0]?.message || appText.companies.deleteDialog.errorMessage;
+        
+        throw new Error(errorMessage);
+      }
+
+      await Swal.fire({
+        icon: 'success',
+        title: appText.companies.deleteDialog.successTitle,
+        text: appText.companies.deleteDialog.successMessage,
+      });
+
+      if (companies.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      
+        return;
+      }
+
+      fetchCompanies();
+    } catch (error) {
+      
+      const message = error instanceof Error ? error.message : appText.companies.deleteDialog.errorMessage;
+      
+      Swal.fire({
+        icon: 'error',
+        title: appText.companies.deleteDialog.errorTitle,
+        text: message,
+      });
+    }
   };
 
   const fetchCompanies = async () => {
@@ -364,10 +428,17 @@ const Companies: FC = () => {
                           </Button>
                           <Button
                             className={styles.actionButtonManage}
-                            onClick={() => handleActionClick('manageManagers', company)}
+                            onClick={() => handleActionClick('manageServices', company)}
                             type="button"
                           >
-                            {appText.companies.actions.manageManagers}
+                            {appText.companies.actions.manageServices}
+                          </Button>
+                          <Button
+                            className={styles.actionButtonDelete}
+                            onClick={() => handleDeleteCompany(company)}
+                            type="button"
+                          >
+                            {appText.companies.actions.delete}
                           </Button>
                         </Container>
                       </td>
@@ -448,8 +519,8 @@ const Companies: FC = () => {
       {activeModal === 'addZone' && selectedCompany && (
         <AddZoneModal company={selectedCompany} onClose={closeModal} onSuccess={handleModalSuccess} />
       )}
-      {activeModal === 'manageManagers' && selectedCompany && (
-        <ManageManagersModal company={selectedCompany} onClose={closeModal} onSuccess={handleModalSuccess} />
+      {activeModal === 'manageServices' && selectedCompany && (
+        <ManageServicesModal company={selectedCompany} onClose={closeModal} onSuccess={handleModalSuccess} />
       )}
     </Container>
   );

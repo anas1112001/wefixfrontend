@@ -27,6 +27,7 @@ interface State {
   id: string;
   name: string;
   nameArabic: string | null;
+  parentLookupId: string | null;
 }
 
 interface UserRole {
@@ -258,6 +259,12 @@ interface SubService {
               name
               nameArabic
             }
+            states: getLookupsByCategory(category: STATE) {
+              id
+              name
+              nameArabic
+              parentLookupId
+            }
           }
         `;
 
@@ -362,6 +369,12 @@ interface SubService {
         } else {
           console.warn('No main services data received');
         }
+
+        if (lookupsData.data?.states) {
+          setStates(lookupsData.data.states);
+        } else {
+          console.warn('No states data received');
+        }
       } catch (error) {
         console.error('Error fetching lookups:', error);
       } finally {
@@ -412,6 +425,10 @@ interface SubService {
 
         updated.userRolesTeamLeaderId = firstTeamLeader.id;
         updated.teamLeaderId = firstTeamLeader.id;
+      }
+
+      if (field === 'countryLookupId') {
+        updated.stateLookupId = '';
       }
 
       return updated;
@@ -922,19 +939,40 @@ interface SubService {
             <label className={styles.label}>
               {appText.companyWizard.basicInfo.state} <span className={styles.required}>*</span>
             </label>
-            <select
-              className={styles.select}
-              disabled={!formData.countryLookupId}
-              onChange={(e) => handleInputChange('stateLookupId', e.target.value)}
-              value={formData.stateLookupId}
-            >
-              <option value="">{appText.companyWizard.basicInfo.selectState}</option>
-              {states.map((state) => (
-                <option key={state.id} value={state.id}>
-                  {state.name}
-                </option>
-              ))}
-            </select>
+            {(() => {
+              const filteredStates = states.filter(
+                (state) => state.parentLookupId === formData.countryLookupId,
+              );
+
+              return (
+                <>
+                  <select
+                    className={styles.select}
+                    disabled={!formData.countryLookupId || filteredStates.length === 0}
+                    onChange={(e) => handleInputChange('stateLookupId', e.target.value)}
+                    value={formData.stateLookupId}
+                  >
+                    <option value="">{appText.companyWizard.basicInfo.selectState}</option>
+                    {filteredStates.map((state) => (
+                      <option key={state.id} value={state.id}>
+                        {state.name}
+                      </option>
+                    ))}
+                  </select>
+                  {!formData.countryLookupId && (
+                    <Paragraph className={styles.helperText}>
+                      {appText.companyWizard.basicInfo.selectCountry}
+                    </Paragraph>
+                  )}
+                  {formData.countryLookupId && filteredStates.length === 0 && (
+                    <Paragraph className={styles.helperText}>
+                      {appText.companyWizard.basicInfo.noStates ||
+                        'No states available for this country.'}
+                    </Paragraph>
+                  )}
+                </>
+              );
+            })()}
           </Container>
         </Container>
 

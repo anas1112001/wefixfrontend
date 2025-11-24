@@ -1,25 +1,13 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 import Container from 'components/Atoms/Container/Container';
 import Heading from 'components/Atoms/Heading/Heading';
 import InputField from 'components/Atoms/InputField/InputField';
 import Button from 'components/Atoms/Button/Button';
 import Form from 'components/Atoms/Form/Form';
-import Paragraph from 'components/Atoms/Paragraph/Paragraph';
+import { appText } from 'data/appText';
 import styles from '../EditCompanyModal/EditCompanyModal.module.css';
 import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
-
-interface Country {
-  code: string | null;
-  id: string;
-  name: string;
-}
-
-interface UserRole {
-  id: string;
-  name: string;
-  nameArabic: string | null;
-}
 
 interface Company {
   id: string;
@@ -33,58 +21,27 @@ interface AddUserModalProps {
 }
 
 const AddUserModal: FC<AddUserModalProps> = ({ company, onClose, onSuccess }) => {
+  const modalText = appText.companies.modals.addUser;
+  const commonText = appText.companies.modals.common;
+  const roleOptions = useMemo(
+    () => Object.entries(modalText.roles).map(([value, label]) => ({ value, label })),
+    [modalText.roles],
+  );
+
   const [loading, setLoading] = useState(false);
-  const [countries, setCountries] = useState<Country[]>([]);
-  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [formData, setFormData] = useState({
-    fullNameAr: '',
-    fullNameEn: '',
-    userRoleId: '',
-    countryId: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    mobileNumber: '',
+    password: '',
+    userRole: roleOptions[0]?.value || 'COMPANY',
   });
 
-  useEffect(() => {
-    const fetchLookups = async () => {
-      try {
-        const response = await fetch(GRAPHQL_ENDPOINT, {
-          body: JSON.stringify({
-            query: `
-              query GetLookups {
-                countries: getLookupsByCategory(category: COUNTRY) {
-                  id
-                  name
-                  code
-                }
-                userRoles: getLookupsByCategory(category: USER_ROLE) {
-                  id
-                  name
-                  nameArabic
-                }
-              }
-            `,
-          }),
-          headers: { 'Content-Type': 'application/json' },
-          method: 'POST',
-        });
-
-        const data = await response.json();
-
-        if (data.data?.countries) {
-          setCountries(data.data.countries);
-        }
-
-        if (data.data?.userRoles) {
-          setUserRoles(data.data.userRoles);
-        }
-      } catch (error) {
-        console.error('Error fetching lookups:', error);
-      }
-    };
-
-    fetchLookups();
-  }, []);
+  const generateUserNumber = () => `USR${Math.random().toString(36).slice(2, 9).toUpperCase()}`.slice(0, 10);
+  const generateIdentifier = (prefix: string) =>
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? `${prefix}-${crypto.randomUUID()}`
+      : `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -93,11 +50,11 @@ const AddUserModal: FC<AddUserModalProps> = ({ company, onClose, onSuccess }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.fullNameEn || !formData.mobileNumber || !formData.email) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       Swal.fire({
         icon: 'warning',
-        title: 'Validation Error',
-        text: 'Please fill in all required fields.',
+        title: commonText.validationTitle,
+        text: commonText.validationMessage,
       });
 
       return;
@@ -106,10 +63,46 @@ const AddUserModal: FC<AddUserModalProps> = ({ company, onClose, onSuccess }) =>
     setLoading(true);
 
     try {
-      await Swal.fire({
+      const response = await fetch(GRAPHQL_ENDPOINT, {
+        body: JSON.stringify({
+          query: `
+            mutation CreateUser($userData: CreateUserInput!) {
+              createUser(userData: $userData) {
+                message
+                user {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            userData: {
+              companyId: company.id,
+              deviceId: generateIdentifier('device'),
+              email: formData.email,
+              fcmToken: generateIdentifier('fcm'),
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              password: formData.password,
+              userNumber: generateUserNumber(),
+              userRole: formData.userRole,
+            },
+          },
+        }),
+        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+      });
+
+      const payload = await response.json();
+
+      if (payload.errors) {
+        throw new Error(payload.errors[0].message);
+      }
+
+      Swal.fire({
         icon: 'success',
-        title: 'User Added!',
-        text: `User "${formData.fullNameEn}" has been added to company "${company.title}".`,
+        title: commonText.successTitle,
+        text: modalText.successMessage,
         timer: 1500,
         showConfirmButton: false,
       });
@@ -119,8 +112,8 @@ const AddUserModal: FC<AddUserModalProps> = ({ company, onClose, onSuccess }) =>
     } catch (error: any) {
       Swal.fire({
         icon: 'error',
-        title: 'Error',
-        text: `Failed to add user: ${error.message || 'Unknown error'}`,
+        title: commonText.errorTitle,
+        text: `${modalText.errorMessage} ${error.message || 'Unknown error'}`,
       });
     } finally {
       setLoading(false);
@@ -132,7 +125,7 @@ const AddUserModal: FC<AddUserModalProps> = ({ company, onClose, onSuccess }) =>
       <Container className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <Container className={styles.modalHeader}>
           <Heading className={styles.modalTitle} level="2">
-            Add User to: {company.title}
+            {modalText.title}: {company.title}
           </Heading>
           <Button className={styles.closeButton} onClick={onClose} type="button">
             <i className="fas fa-times"></i>
@@ -143,110 +136,88 @@ const AddUserModal: FC<AddUserModalProps> = ({ company, onClose, onSuccess }) =>
           <Container className={styles.formRow}>
             <Container className={styles.formField}>
               <label className={styles.label}>
-                Full Name (Arabic) <span className={styles.required}>*</span>
+                {modalText.firstName} <span className={styles.required}>*</span>
               </label>
               <InputField
-                name="fullNameAr"
-                onChange={(e) => handleInputChange('fullNameAr', e.target.value)}
+                name="firstName"
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
                 pattern={undefined}
-                placeholder="اسم المستخدم"
+                placeholder={modalText.firstNamePlaceholder}
                 title=""
                 type="text"
-                value={formData.fullNameAr}
+                value={formData.firstName}
               />
             </Container>
             <Container className={styles.formField}>
               <label className={styles.label}>
-                Full Name (English) <span className={styles.required}>*</span>
+                {modalText.lastName} <span className={styles.required}>*</span>
               </label>
               <InputField
-                name="fullNameEn"
-                onChange={(e) => handleInputChange('fullNameEn', e.target.value)}
+                name="lastName"
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
                 pattern={undefined}
-                placeholder="User Name"
+                placeholder={modalText.lastNamePlaceholder}
                 title=""
                 type="text"
-                value={formData.fullNameEn}
+                value={formData.lastName}
               />
             </Container>
           </Container>
 
           <Container className={styles.formField}>
             <label className={styles.label}>
-              User Role <span className={styles.required}>*</span>
-            </label>
-            <select
-              className={styles.select}
-              onChange={(e) => handleInputChange('userRoleId', e.target.value)}
-              value={formData.userRoleId}
-            >
-              <option value="">Select User Role</option>
-              {userRoles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
-          </Container>
-
-          <Container className={styles.formRow}>
-            <Container className={styles.formField}>
-              <label className={styles.label}>
-                Country <span className={styles.required}>*</span>
-              </label>
-              <select
-                className={styles.select}
-                onChange={(e) => handleInputChange('countryId', e.target.value)}
-                value={formData.countryId}
-              >
-                <option value="">Select Country</option>
-                {countries.map((country) => (
-                  <option key={country.id} value={country.id}>
-                    {country.name} {country.code && `(${country.code})`}
-                  </option>
-                ))}
-              </select>
-            </Container>
-            <Container className={styles.formField}>
-              <label className={styles.label}>
-                Mobile Number <span className={styles.required}>*</span>
-              </label>
-              <InputField
-                name="mobileNumber"
-                onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
-                pattern={undefined}
-                placeholder="7XX XXX XXX"
-                title=""
-                type="tel"
-                value={formData.mobileNumber}
-              />
-              <Paragraph className={styles.helperText}>
-                Mobile number only (without country code)
-              </Paragraph>
-            </Container>
-          </Container>
-
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              Email Address <span className={styles.required}>*</span>
+              {modalText.email} <span className={styles.required}>*</span>
             </label>
             <InputField
               name="email"
               onChange={(e) => handleInputChange('email', e.target.value)}
               pattern={undefined}
-              placeholder="user@example.com"
+              placeholder={modalText.emailPlaceholder}
               title=""
               type="email"
               value={formData.email}
             />
           </Container>
 
+          <Container className={styles.formRow}>
+            <Container className={styles.formField}>
+              <label className={styles.label}>
+                {modalText.password} <span className={styles.required}>*</span>
+              </label>
+              <InputField
+                name="password"
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                pattern={undefined}
+                placeholder={modalText.passwordPlaceholder}
+                title=""
+                type="password"
+                value={formData.password}
+              />
+            </Container>
+            <Container className={styles.formField}>
+              <label className={styles.label}>
+                {modalText.userRole} <span className={styles.required}>*</span>
+              </label>
+              <select
+                className={styles.select}
+                onChange={(e) => handleInputChange('userRole', e.target.value)}
+                value={formData.userRole}
+              >
+                {roleOptions.map((role) => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
+            </Container>
+          </Container>
+
           <Container className={styles.modalFooter}>
             <Button className={styles.cancelButton} onClick={onClose} type="button">
-              Cancel
+              {commonText.cancel}
             </Button>
             <Button className={styles.saveButton} disabled={loading} onClick={() => undefined} type="submit">
-              {loading ? 'Adding...' : 'Add User'}
+              {loading ? commonText.loading : modalText.save}
             </Button>
           </Container>
         </Form>
