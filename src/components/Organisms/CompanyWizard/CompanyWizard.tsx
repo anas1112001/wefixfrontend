@@ -23,6 +23,12 @@ interface EstablishedType {
   nameArabic: string | null;
 }
 
+interface State {
+  id: string;
+  name: string;
+  nameArabic: string | null;
+}
+
 interface UserRole {
   id: string;
   name: string;
@@ -64,6 +70,7 @@ interface CompanyWizardProps {
 const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [countries, setCountries] = useState<Country[]>([]);
+  const [states, setStates] = useState<State[]>([]);
   const [establishedTypes, setEstablishedTypes] = useState<EstablishedType[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [teamLeaders, setTeamLeaders] = useState<TeamLeader[]>([]);
@@ -92,6 +99,7 @@ interface SubService {
     companyNameArabic: '',
     companyNameEnglish: '',
     countryLookupId: '',
+    stateLookupId: '',
     establishedTypeLookupId: '',
     hoAddress: '',
     hoLocation: '',
@@ -910,6 +918,27 @@ interface SubService {
               ))}
             </select>
           </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.basicInfo.state} <span className={styles.required}>*</span>
+            </label>
+            <select
+              className={styles.select}
+              disabled={!formData.countryLookupId}
+              onChange={(e) => handleInputChange('stateLookupId', e.target.value)}
+              value={formData.stateLookupId}
+            >
+              <option value="">{appText.companyWizard.basicInfo.selectState}</option>
+              {states.map((state) => (
+                <option key={state.id} value={state.id}>
+                  {state.name}
+                </option>
+              ))}
+            </select>
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
           <Container className={styles.formField}>
             <label className={styles.label}>
               {appText.companyWizard.basicInfo.establishedType} <span className={styles.required}>*</span>

@@ -8,6 +8,11 @@ import InputField from 'components/Atoms/InputField/InputField';
 import Button from 'components/Atoms/Button/Button';
 import Sidebar from 'components/Molecules/Sidebar/Sidebar';
 import CompanyWizard from 'components/Organisms/CompanyWizard/CompanyWizard';
+import EditCompanyModal from 'components/Organisms/EditCompanyModal/EditCompanyModal';
+import AddUserModal from 'components/Organisms/AddUserModal/AddUserModal';
+import AddBranchModal from 'components/Organisms/AddBranchModal/AddBranchModal';
+import AddZoneModal from 'components/Organisms/AddZoneModal/AddZoneModal';
+import ManageManagersModal from 'components/Organisms/ManageManagersModal/ManageManagersModal';
 import { appText } from 'data/appText';
 import styles from './Companies.module.css';
 import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
@@ -37,6 +42,8 @@ interface CompaniesData {
   totalPages: number;
 }
 
+type CompanyAction = 'edit' | 'addUser' | 'addBranch' | 'addZone' | 'manageManagers';
+
 const Companies: FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +55,23 @@ const Companies: FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [showWizard, setShowWizard] = useState(false);
   const [establishedTypes, setEstablishedTypes] = useState<Lookup[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
   const limit = 10;
+
+  const handleActionClick = (action: CompanyAction, company: Company) => {
+    setSelectedCompany(company);
+    setActiveModal(action);
+  };
+
+  const closeModal = () => {
+    setSelectedCompany(null);
+    setActiveModal(null);
+  };
+
+  const handleModalSuccess = () => {
+    fetchCompanies();
+  };
 
   const fetchCompanies = async () => {
     setLoading(true);
@@ -311,19 +334,39 @@ const Companies: FC = () => {
                       </td>
                       <td>
                         <Container className={styles.actions}>
-                          <Button className={styles.actionButtonEdit} onClick={() => undefined} type="button">
+                          <Button
+                            className={styles.actionButtonEdit}
+                            onClick={() => handleActionClick('edit', company)}
+                            type="button"
+                          >
                             {appText.companies.actions.edit}
                           </Button>
-                          <Button className={styles.actionButtonAdd} onClick={() => undefined} type="button">
+                          <Button
+                            className={styles.actionButtonAdd}
+                            onClick={() => handleActionClick('addUser', company)}
+                            type="button"
+                          >
                             {appText.companies.actions.addUser}
                           </Button>
-                          <Button className={styles.actionButtonBranch} onClick={() => undefined} type="button">
+                          <Button
+                            className={styles.actionButtonBranch}
+                            onClick={() => handleActionClick('addBranch', company)}
+                            type="button"
+                          >
                             {appText.companies.actions.addBranch}
                           </Button>
-                          <Button className={styles.actionButtonZone} onClick={() => undefined} type="button">
+                          <Button
+                            className={styles.actionButtonZone}
+                            onClick={() => handleActionClick('addZone', company)}
+                            type="button"
+                          >
                             {appText.companies.actions.addZone}
                           </Button>
-                          <Button className={styles.actionButtonManage} onClick={() => undefined} type="button">
+                          <Button
+                            className={styles.actionButtonManage}
+                            onClick={() => handleActionClick('manageManagers', company)}
+                            type="button"
+                          >
                             {appText.companies.actions.manageManagers}
                           </Button>
                         </Container>
@@ -393,6 +436,21 @@ const Companies: FC = () => {
         )}
       </Container>
       {showWizard && <CompanyWizard onClose={() => setShowWizard(false)} />}
+      {activeModal === 'edit' && selectedCompany && (
+        <EditCompanyModal company={selectedCompany} onClose={closeModal} onSuccess={handleModalSuccess} />
+      )}
+      {activeModal === 'addUser' && selectedCompany && (
+        <AddUserModal company={selectedCompany} onClose={closeModal} onSuccess={handleModalSuccess} />
+      )}
+      {activeModal === 'addBranch' && selectedCompany && (
+        <AddBranchModal company={selectedCompany} onClose={closeModal} onSuccess={handleModalSuccess} />
+      )}
+      {activeModal === 'addZone' && selectedCompany && (
+        <AddZoneModal company={selectedCompany} onClose={closeModal} onSuccess={handleModalSuccess} />
+      )}
+      {activeModal === 'manageManagers' && selectedCompany && (
+        <ManageManagersModal company={selectedCompany} onClose={closeModal} onSuccess={handleModalSuccess} />
+      )}
     </Container>
   );
 };
