@@ -16,18 +16,11 @@ interface Country {
   name: string;
 }
 
-interface EstablishedType {
-  id: string;
-  name: string;
-  nameArabic: string | null;
-}
-
 interface Company {
   companyId: string;
   companyNameArabic?: string | null;
   companyNameEnglish?: string | null;
   countryLookup: { id: string; name: string } | null;
-  establishedTypeLookup: { id: string; name: string } | null;
   hoAddress?: string | null;
   id: string;
   isActive: string;
@@ -46,13 +39,11 @@ const EditCompanyModal: FC<EditCompanyModalProps> = ({ company, onClose, onSucce
   const commonText = appText.companies.modals.common;
   const [loading, setLoading] = useState(false);
   const [countries, setCountries] = useState<Country[]>([]);
-  const [establishedTypes, setEstablishedTypes] = useState<EstablishedType[]>([]);
   const [formData, setFormData] = useState({
     companyTitle: company.title || '',
     companyNameArabic: company.companyNameArabic || '',
     companyNameEnglish: company.companyNameEnglish || '',
     countryLookupId: company.countryLookup?.id || '',
-    establishedTypeLookupId: company.establishedTypeLookup?.id || '',
     hoAddress: company.hoAddress || '',
     isActive: company.isActive === 'Active',
   });
@@ -69,11 +60,6 @@ const EditCompanyModal: FC<EditCompanyModalProps> = ({ company, onClose, onSucce
                   name
                   code
                 }
-                establishedTypes: getLookupsByCategory(category: ESTABLISHED_TYPE) {
-                  id
-                  name
-                  nameArabic
-                }
               }
             `,
           }),
@@ -85,10 +71,6 @@ const EditCompanyModal: FC<EditCompanyModalProps> = ({ company, onClose, onSucce
 
         if (data.data?.countries) {
           setCountries(data.data.countries);
-        }
-
-        if (data.data?.establishedTypes) {
-          setEstablishedTypes(data.data.establishedTypes);
         }
       } catch (error) {
         console.error('Error fetching lookups:', error);
@@ -127,7 +109,6 @@ const EditCompanyModal: FC<EditCompanyModalProps> = ({ company, onClose, onSucce
               companyNameArabic: formData.companyNameArabic || null,
               companyNameEnglish: formData.companyNameEnglish || null,
               countryLookupId: formData.countryLookupId || null,
-              establishedTypeLookupId: formData.establishedTypeLookupId || null,
               hoAddress: formData.hoAddress || null,
               isActive: formData.isActive ? 'ACTIVE' : 'INACTIVE',
             },
@@ -230,21 +211,6 @@ const EditCompanyModal: FC<EditCompanyModalProps> = ({ company, onClose, onSucce
                 {countries.map((country) => (
                   <option key={country.id} value={country.id}>
                     {country.name}
-                  </option>
-                ))}
-              </select>
-            </Container>
-            <Container className={styles.formField}>
-              <label className={styles.label}>{modalText.establishedType}</label>
-              <select
-                className={styles.select}
-                onChange={(e) => handleInputChange('establishedTypeLookupId', e.target.value)}
-                value={formData.establishedTypeLookupId}
-              >
-                <option value="">{modalText.selectEstablishedType}</option>
-                {establishedTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name}
                   </option>
                 ))}
               </select>

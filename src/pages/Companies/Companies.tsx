@@ -7,6 +7,7 @@ import Paragraph from 'components/Atoms/Paragraph/Paragraph';
 import InputField from 'components/Atoms/InputField/InputField';
 import Button from 'components/Atoms/Button/Button';
 import Sidebar from 'components/Molecules/Sidebar/Sidebar';
+import AppHeader from 'components/Organisms/AppHeader/AppHeader';
 import CompanyWizard from 'components/Organisms/CompanyWizard/CompanyWizard';
 import EditCompanyModal from 'components/Organisms/EditCompanyModal/EditCompanyModal';
 import AddUserModal from 'components/Organisms/AddUserModal/AddUserModal';
@@ -26,11 +27,9 @@ interface Lookup {
 interface Company {
   companyId: string;
   countryLookup: Lookup | null;
-  establishedTypeLookup: Lookup | null;
   id: string;
   isActive: string;
   logo: string | null;
-  numberOfBranches: number;
   title: string;
 }
 
@@ -49,12 +48,10 @@ const Companies: FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [showWizard, setShowWizard] = useState(false);
-  const [establishedTypes, setEstablishedTypes] = useState<Lookup[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const limit = 10;
@@ -154,10 +151,6 @@ const Companies: FC = () => {
         filter.status = statusFilter;
       }
 
-      if (typeFilter !== 'all') {
-        filter.type = typeFilter;
-      }
-
       const response = await fetch(GRAPHQL_ENDPOINT, {
         body: JSON.stringify({
           query: `
@@ -168,17 +161,11 @@ const Companies: FC = () => {
                   companyId
                   title
                   isActive
-                  establishedTypeLookup {
-                    id
-                    name
-                    nameArabic
-                  }
                   countryLookup {
                     id
                     name
                     nameArabic
                   }
-                  numberOfBranches
                   logo
                 }
                 total
@@ -223,49 +210,8 @@ const Companies: FC = () => {
   };
 
   useEffect(() => {
-    const fetchEstablishedTypes = async () => {
-      try {
-        const response = await fetch(GRAPHQL_ENDPOINT, {
-          body: JSON.stringify({
-            query: `
-              query GetEstablishedTypes {
-                getLookupsByCategory(category: ESTABLISHED_TYPE) {
-                  id
-                  name
-                  nameArabic
-                }
-              }
-            `,
-          }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-        });
-
-        const payload = await response.json();
-
-        if (payload.data?.getLookupsByCategory) {
-          setEstablishedTypes(payload.data.getLookupsByCategory);
-        }
-      } catch (error) {
-        console.error('Error fetching established types:', error);
-        const message = error instanceof Error ? error.message : 'Failed to fetch established types';
-
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: message,
-        });
-      }
-    };
-
-    fetchEstablishedTypes();
-  }, []);
-
-  useEffect(() => {
     fetchCompanies();
-  }, [currentPage, statusFilter, typeFilter]);
+  }, [currentPage, statusFilter]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
@@ -290,8 +236,10 @@ const Companies: FC = () => {
 
   return (
     <Container className={styles.companiesLayout}>
-      <Sidebar />
-      <Container className={styles.mainContent}>
+      <AppHeader />
+      <Container className={styles.contentWrapper}>
+        <Sidebar />
+        <Container className={styles.mainContent}>
         <Container className={styles.header}>
           <Heading className={styles.pageTitle} level="1">
             {appText.companies.title}
@@ -326,21 +274,6 @@ const Companies: FC = () => {
               <option value="Active">{appText.companies.status.active}</option>
               <option value="Inactive">{appText.companies.status.inactive}</option>
             </select>
-            <select
-              className={styles.filterSelect}
-              onChange={(e) => {
-                setTypeFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              value={typeFilter}
-            >
-              <option value="all">{appText.companies.allTypes}</option>
-              {establishedTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
             <Paragraph className={styles.resultsCount}>
               {appText.companies.showingResults.replace('{count}', total.toString())}
             </Paragraph>
@@ -359,8 +292,6 @@ const Companies: FC = () => {
                     <th>{appText.companies.table.companyId}</th>
                     <th>{appText.companies.table.companyTitle}</th>
                     <th>{appText.companies.table.isActive}</th>
-                    <th>{appText.companies.table.establishedType}</th>
-                    <th>{appText.companies.table.numberOfBranches}</th>
                     <th>{appText.companies.table.teamLeaders}</th>
                     <th>{appText.companies.table.actions}</th>
                   </tr>
@@ -388,8 +319,6 @@ const Companies: FC = () => {
                           {company.isActive}
                         </span>
                       </td>
-                      <td>{company.establishedTypeLookup?.name || '-'}</td>
-                      <td>{company.numberOfBranches}</td>
                       <td>
                         <Container className={styles.teamLeaders}>
                           <Container className={styles.leaderCircle}>TL1</Container>
@@ -505,6 +434,7 @@ const Companies: FC = () => {
             </Container>
           </>
         )}
+        </Container>
       </Container>
       {showWizard && <CompanyWizard onClose={() => setShowWizard(false)} />}
       {activeModal === 'edit' && selectedCompany && (

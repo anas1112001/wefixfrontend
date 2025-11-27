@@ -82,7 +82,12 @@ export const LoginPage: FC = () => {
                   firstName
                   lastName
                   email
-                  userRole
+                  userRole {
+                    id
+                    name
+                    nameArabic
+                    code
+                  }
                 }
               }
             }
@@ -168,12 +173,14 @@ export const LoginPage: FC = () => {
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }}
+        role="main"
+        aria-label="Login page"
       >
         <Container className={styles.loginCard}>
           <Container className={styles.loginCardHeader}>
             <Container className={styles.logoContainer}>
-              <i className={`fas fa-wrench ${styles.logoIcon}`}></i>
-              <i className={`fas fa-lock ${styles.logoIcon}`}></i>
+              <i className={`fas fa-wrench ${styles.logoIcon}`} aria-hidden="true"></i>
+              <i className={`fas fa-lock ${styles.logoIcon}`} aria-hidden="true"></i>
               <Heading className={styles.logoText} level="2">
                 {appText.login.brandName}
               </Heading>
@@ -215,8 +222,9 @@ export const LoginPage: FC = () => {
                   className={styles.passwordToggle}
                   onClick={() => setShowPassword((previous) => !previous)}
                   type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  <i className={showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'}></i>
+                  <i className={showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'} aria-hidden="true"></i>
                 </button>
               </Container>
             </Container>
@@ -242,8 +250,8 @@ export const LoginPage: FC = () => {
 
           <Container className={styles.demoCredentials}>
             <Container className={styles.demoHeader}>
-              <i className={`fas fa-wrench ${styles.demoIcon}`}></i>
-              <i className={`fas fa-lock ${styles.demoIcon}`}></i>
+              <i className={`fas fa-wrench ${styles.demoIcon}`} aria-hidden="true"></i>
+              <i className={`fas fa-lock ${styles.demoIcon}`} aria-hidden="true"></i>
               <Paragraph className={styles.demoTitle}>{appText.login.demoCredentials}</Paragraph>
             </Container>
             <Paragraph className={styles.demoText}>{appText.login.demoUsername}</Paragraph>

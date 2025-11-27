@@ -6,6 +6,7 @@ import Paragraph from 'components/Atoms/Paragraph/Paragraph';
 import InputField from 'components/Atoms/InputField/InputField';
 import Button from 'components/Atoms/Button/Button';
 import Sidebar from 'components/Molecules/Sidebar/Sidebar';
+import AppHeader from 'components/Organisms/AppHeader/AppHeader';
 import { appText } from 'data/appText';
 import styles from './Individuals.module.css';
 import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
@@ -124,8 +125,10 @@ const Individuals: FC = () => {
 
   return (
     <Container className={styles.individualsLayout}>
-      <Sidebar />
-      <Container className={styles.mainContent}>
+      <AppHeader />
+      <Container className={styles.contentWrapper}>
+        <Sidebar />
+        <Container className={styles.mainContent}>
         <Container className={styles.header}>
           <Heading className={styles.pageTitle} level="1">
             {appText.individuals.title}
@@ -271,6 +274,7 @@ const Individuals: FC = () => {
             </Container>
           </>
         )}
+        </Container>
       </Container>
     </Container>
   );

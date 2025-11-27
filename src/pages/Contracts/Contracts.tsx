@@ -6,6 +6,7 @@ import Paragraph from 'components/Atoms/Paragraph/Paragraph';
 import InputField from 'components/Atoms/InputField/InputField';
 import Button from 'components/Atoms/Button/Button';
 import Sidebar from 'components/Molecules/Sidebar/Sidebar';
+import AppHeader from 'components/Organisms/AppHeader/AppHeader';
 import { appText } from 'data/appText';
 import styles from './Contracts.module.css';
 import AddContractModal from './AddContractModal';
@@ -204,8 +205,10 @@ const Contracts: FC = () => {
 
   return (
     <Container className={styles.contractsLayout}>
-      <Sidebar />
-      <Container className={styles.mainContent}>
+      <AppHeader />
+      <Container className={styles.contentWrapper}>
+        <Sidebar />
+        <Container className={styles.mainContent}>
         <Container className={styles.header}>
           <Heading className={styles.pageTitle} level="1">
             {appText.contracts.title}
@@ -374,6 +377,7 @@ const Contracts: FC = () => {
             </Container>
           </>
         )}
+      </Container>
       </Container>
       {showModal && <AddContractModal onClose={() => { setShowModal(false); fetchContracts(); }} />}
     </Container>

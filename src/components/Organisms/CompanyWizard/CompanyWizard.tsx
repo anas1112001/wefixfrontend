@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import Container from 'components/Atoms/Container/Container';
 import Heading from 'components/Atoms/Heading/Heading';
@@ -10,6 +10,71 @@ import Form from 'components/Atoms/Form/Form';
 import { appText } from 'data/appText';
 import styles from './CompanyWizard.module.css';
 import { GRAPHQL_ENDPOINT } from 'utils/apiConfig';
+import SecureStorage from 'modules/secureStorage';
+
+// Helper function to get upload endpoint URL
+const getUploadEndpoint = (): string => {
+  const graphqlUrl = GRAPHQL_ENDPOINT;
+
+  // Replace /graphql with /upload
+  return graphqlUrl.replace('/graphql', '/upload');
+};
+
+// Helper function to get headers with authorization
+const getHeaders = (): HeadersInit => {
+  const token = SecureStorage.getAccessToken();
+
+  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
+};
+
+// Helper function to upload file via FormData
+const uploadFile = async (file: File, category: 'image' | 'contract'): Promise<string> => {
+  const uploadEndpoint = getUploadEndpoint();
+  const formData = new FormData();
+  
+  // Generate unique filename with timestamp and original name
+  const fileExtension = file.name.split('.').pop();
+  const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
+  const timestamp = Date.now();
+  const filename = `${category}-${fileNameWithoutExt}-${timestamp}.${fileExtension}`;
+  
+  formData.append('file', file);
+  formData.append('filename', filename);
+  formData.append('category', category);
+  formData.append('chunkIndex', '0');
+  formData.append('totalChunks', '1');
+  
+  const response = await fetch(uploadEndpoint, {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+
+    throw new Error(`File upload failed: ${errorText || response.statusText}`);
+  }
+  
+  const result = await response.json();
+  
+  // Return the path from response or construct it
+  if (result.path) {
+    return result.path;
+  }
+  
+  // Fallback: construct path based on category
+  if (category === 'image') {
+    return `/WeFixFiles/Images/${filename}`;
+  } else {
+    return `/WeFixFiles/Contracts/${filename}`;
+  }
+};
 
 interface Country {
   code: string | null;
@@ -17,11 +82,6 @@ interface Country {
   name: string;
 }
 
-interface EstablishedType {
-  id: string;
-  name: string;
-  nameArabic: string | null;
-}
 
 interface State {
   id: string;
@@ -72,7 +132,6 @@ const CompanyWizard: FC<CompanyWizardProps> = ({ onClose }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [countries, setCountries] = useState<Country[]>([]);
   const [states, setStates] = useState<State[]>([]);
-  const [establishedTypes, setEstablishedTypes] = useState<EstablishedType[]>([]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [teamLeaders, setTeamLeaders] = useState<TeamLeader[]>([]);
   const [businessModels, setBusinessModels] = useState<BusinessModel[]>([]);
@@ -95,13 +154,13 @@ interface SubService {
   const [subServices, setSubServices] = useState<SubService[]>([]);
   const [maintenanceServices, setMaintenanceServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [invalidFields, setInvalidFields] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState({
     companyTitle: '',
     companyNameArabic: '',
     companyNameEnglish: '',
     countryLookupId: '',
     stateLookupId: '',
-    establishedTypeLookupId: '',
     hoAddress: '',
     hoLocation: '',
     logo: null as File | null,
@@ -114,7 +173,6 @@ interface SubService {
     isActive: true,
     numberOfOwner: 1,
     numberOfTeamLeader: 1,
-    numberOfBranch: 1,
     numberOfPreventiveTickets: 1,
     numberOfCorrectiveTickets: 1,
     numberOfEmergencyTickets: 1,
@@ -122,7 +180,7 @@ interface SubService {
     contractEndDate: '',
     contractFiles: [] as File[],
     contractDescription: '',
-    contractValue: '',
+    contractValue: '0',
     // User Roles data
     userRoleId: '',
     fullNameAr: '',
@@ -181,9 +239,7 @@ interface SubService {
             mainServiceId,
           },
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getHeaders(),
         method: 'POST',
       });
 
@@ -227,20 +283,16 @@ interface SubService {
               code
               nameArabic
             }
-            establishedTypes: getLookupsByCategory(category: ESTABLISHED_TYPE) {
-              id
-              name
-              nameArabic
-            }
             userRoles: getLookupsByCategory(category: USER_ROLE) {
               id
               name
               nameArabic
             }
-            teamLeaders: getLookupsByCategory(category: TEAM_LEADER) {
+            teamLeaders: getLookupsByCategory(category: USER_ROLE) {
               id
               name
               nameArabic
+              code
             }
             businessModels: getLookupsByCategory(category: BUSINESS_MODEL) {
               id
@@ -275,9 +327,7 @@ interface SubService {
           body: JSON.stringify({
             query: queryString,
           }),
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: getHeaders(),
           method: 'POST',
         });
 
@@ -314,13 +364,6 @@ interface SubService {
           console.warn('No countries data received. Full response:', lookupsData);
         }
 
-        if (lookupsData.data?.establishedTypes) {
-          setEstablishedTypes(lookupsData.data.establishedTypes);
-          console.log('Established types loaded:', lookupsData.data.establishedTypes.length);
-        } else {
-          console.warn('No established types data received');
-        }
-
         if (lookupsData.data?.userRoles) {
           setUserRoles(lookupsData.data.userRoles);
           console.log('User roles loaded:', lookupsData.data.userRoles.length);
@@ -329,8 +372,13 @@ interface SubService {
         }
 
         if (lookupsData.data?.teamLeaders) {
-          setTeamLeaders(lookupsData.data.teamLeaders);
-          console.log('Team leaders loaded:', lookupsData.data.teamLeaders.length);
+          // Filter to only show USER_ROLE with code 'TEAMLEADER'
+          const teamLeaderRole = lookupsData.data.teamLeaders.filter(
+            (tl: any) => tl.code === 'TEAMLEADER'
+          );
+
+          setTeamLeaders(teamLeaderRole);
+          console.log('Team leaders loaded:', teamLeaderRole.length);
         } else {
           console.warn('No team leaders data received');
         }
@@ -375,8 +423,20 @@ interface SubService {
         } else {
           console.warn('No states data received');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching lookups:', error);
+        
+        // Show user-friendly error message
+        const errorMessage = error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')
+          ? 'Unable to connect to the server. Please make sure the backend server is running on http://localhost:4000'
+          : error.message || 'Failed to load data. Please try again later.';
+        
+        Swal.fire({
+          icon: 'error',
+          title: 'Connection Error',
+          text: errorMessage,
+          confirmButtonText: 'OK',
+        });
       } finally {
         setLoading(false);
       }
@@ -418,6 +478,83 @@ interface SubService {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [field]: value };
+
+      // Ticket ShortCode: store only the part after "TKT-" prefix, max 6 characters
+      if (field === 'ticketShortCode') {
+        // Remove "TKT-" prefix if user tries to type it, keep only the suffix
+        const cleanValue = value.replace(/^TKT-?/, '');
+        
+        // Limit to 6 characters maximum
+        const limitedValue = cleanValue.length > 6 ? cleanValue.substring(0, 6) : cleanValue;
+
+        updated[field] = limitedValue;
+
+        // Clear validation error when user types
+        if (invalidFields.has(field)) {
+          const newInvalidFields = new Set(invalidFields);
+
+          newInvalidFields.delete(field);
+          setInvalidFields(newInvalidFields);
+        }
+
+        return updated;
+      }
+
+      // Contract Value: only accept numbers, max 7 characters
+      if (field === 'contractValue') {
+        // Remove any non-numeric characters except decimal point
+        const numericValue = value.replace(/[^0-9.]/g, '');
+
+        // Ensure only one decimal point
+        const parts = numericValue.split('.');
+        let cleanValue = parts.length > 2 ? parts[0] + '.' + parts.slice(1).join('') : numericValue;
+
+        // Limit to 7 characters
+        if (cleanValue.length > 7) {
+          cleanValue = cleanValue.substring(0, 7);
+        }
+
+        updated[field] = cleanValue || '0';
+
+        // Clear validation error when user types
+        if (invalidFields.has(field)) {
+          const newInvalidFields = new Set(invalidFields);
+
+          newInvalidFields.delete(field);
+          setInvalidFields(newInvalidFields);
+        }
+
+        return updated;
+      }
+
+      // Mobile Number: only accept numbers, max 15 characters
+      if (field === 'mobileNumber') {
+        // Remove any non-numeric characters
+        const numericValue = value.replace(/[^0-9]/g, '');
+
+        // Limit to 15 characters
+        const cleanValue = numericValue.length > 15 ? numericValue.substring(0, 15) : numericValue;
+
+        updated[field] = cleanValue;
+
+        // Clear validation error when user types
+        if (invalidFields.has(field)) {
+          const newInvalidFields = new Set(invalidFields);
+
+          newInvalidFields.delete(field);
+          setInvalidFields(newInvalidFields);
+        }
+
+        return updated;
+      }
+
+      // Clear validation error when user fills a field (for both input and select)
+      if (invalidFields.has(field) && value && (typeof value === 'string' ? value.trim() !== '' : value !== '')) {
+        const newInvalidFields = new Set(invalidFields);
+
+        newInvalidFields.delete(field);
+        setInvalidFields(newInvalidFields);
+      }
 
       // When user role is selected, auto-set first team leader if not already set
       if (field === 'userRoleId' && value && !updated.userRolesTeamLeaderId && teamLeaders.length > 0) {
@@ -461,18 +598,126 @@ interface SubService {
   };
 
   const handleNumberChange = (field: string, delta: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: Math.max(0, (prev[field as keyof typeof prev] as number) + delta),
-    }));
+    setFormData((prev) => {
+      const currentValue = prev[field as keyof typeof prev] as number;
+      const newValue = Math.max(1, currentValue + delta);
+
+      return {
+        ...prev,
+        [field]: newValue,
+      };
+    });
   };
+
+  // Helper function to fill test data for quick testing
+  const fillTestData = useCallback(() => {
+    // Get first available options from loaded data
+    const firstCountry = countries.length > 0 ? countries[0].id : '';
+    const firstState = states.length > 0 ? states[0].id : '';
+    const firstUserRole = userRoles.length > 0 ? userRoles[0].id : '';
+    const firstTeamLeader = teamLeaders.length > 0 ? teamLeaders[0].id : '';
+    const firstBusinessModel = businessModels.length > 0 ? businessModels[0].id : '';
+    const firstManagedBy = managedBy.length > 0 ? managedBy[0].id : '';
+    const firstMainService = mainServices.length > 0 ? mainServices[0].id : '';
+
+    // Generate timestamp for unique values
+    const timestamp = Date.now();
+
+    setFormData({
+      // Basic Info
+      companyTitle: `Test Company ${timestamp}`,
+      companyNameArabic: `شركة اختبار ${timestamp}`,
+      companyNameEnglish: `Test Company ${timestamp}`,
+      countryLookupId: firstCountry,
+      stateLookupId: firstState,
+      hoAddress: `123 Test Street, Test City ${timestamp}`,
+      hoLocation: `Test Location ${timestamp}`,
+      logo: null,
+
+      // Contract data
+      contractReference: `CONTRACT-${timestamp}`,
+      contractTitle: `Test Contract ${timestamp}`,
+      businessModelLookupId: firstBusinessModel,
+      managedByLookupId: firstManagedBy,
+      ticketShortCode: `TST${timestamp.toString().slice(-4)}`,
+      isActive: true,
+      numberOfOwner: 2,
+      numberOfTeamLeader: 3,
+      numberOfPreventiveTickets: 10,
+      numberOfCorrectiveTickets: 5,
+      numberOfEmergencyTickets: 2,
+      contractStartDate: new Date().toISOString().split('T')[0], // Today
+      contractEndDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year from now
+      contractFiles: [],
+      contractDescription: `Test contract description for testing purposes. Created at ${new Date().toLocaleString()}`,
+      contractValue: '50000',
+
+      // User Roles data
+      userRoleId: firstUserRole,
+      fullNameAr: `اسم اختبار ${timestamp}`,
+      fullNameEn: `Test Name ${timestamp}`,
+      userImage: null,
+      userCountryId: firstCountry,
+      mobileNumber: `+9627${timestamp.toString().slice(-8)}`,
+      email: `test${timestamp}@example.com`,
+      userDescription: `Test user description ${timestamp}`,
+      userRolesTeamLeaderId: firstTeamLeader,
+
+      // Branches data
+      branchTitle: `Test Branch ${timestamp}`,
+      branchNameArabic: `فرع اختبار ${timestamp}`,
+      branchNameEnglish: `Test Branch ${timestamp}`,
+      branchRepresentativeName: `Test Representative ${timestamp}`,
+      representativeMobileNumber: `+9627${timestamp.toString().slice(-8)}`,
+      representativeEmailAddress: `branch${timestamp}@example.com`,
+      teamLeaderId: firstTeamLeader,
+      branchIsActive: true,
+
+      // Zones data
+      zoneTitle: `Test Zone ${timestamp}`,
+      zoneNumber: `Z-${timestamp.toString().slice(-6)}`,
+      zoneDescription: `Test zone description ${timestamp}`,
+      branchId: '', // Will be set when branch is created
+      zoneIsActive: true,
+
+      // Maintenance Services data
+      mainServiceId: firstMainService,
+      subServiceId: '', // Will be loaded based on mainServiceId
+    });
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Test Data Loaded',
+      text: 'All form fields have been filled with test data.',
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  }, [countries, states, userRoles, teamLeaders, businessModels, managedBy, mainServices]);
+
+  // Keyboard shortcut for test data (Ctrl+Shift+T or Cmd+Shift+T)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Check for Ctrl+Shift+T (Windows/Linux) or Cmd+Shift+T (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+        e.preventDefault();
+        fillTestData();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [fillTestData]);
 
   useEffect(() => {
     if (currentStep === 2 && !formData.contractReference && formData.companyTitle) {
       const shortName = formData.companyTitle.substring(0, 2).toUpperCase();
       const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
       const contractRef = `CNT-${shortName}-${randomNum}`;
-      const ticketCode = `TKT-${shortName}-0003`;
+      // Only auto-generate ticketShortCode if it's still empty
+      const ticketCode = formData.ticketShortCode === '' ? shortName : formData.ticketShortCode;
 
       setFormData((prev) => ({
         ...prev,
@@ -480,7 +725,7 @@ interface SubService {
         ticketShortCode: ticketCode,
       }));
     }
-  }, [currentStep, formData.companyTitle, formData.contractReference]);
+  }, [currentStep, formData.companyTitle, formData.contractReference, formData.ticketShortCode]);
 
   // Generate a simple UUID-like string
   const generateUUID = () =>
@@ -502,67 +747,417 @@ interface SubService {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1: // Basic Info
-        if (!formData.companyTitle || !formData.companyNameArabic || !formData.companyNameEnglish) {
+        const filteredStates = states.filter(
+          (state) => state.parentLookupId === formData.countryLookupId,
+        );
+        const requiredFields = [
+          { 
+            key: 'companyTitle', 
+            value: formData.companyTitle,
+            minLength: 5,
+            maxLength: 100,
+          },
+          { 
+            key: 'companyNameArabic', 
+            value: formData.companyNameArabic,
+            minLength: 5,
+            maxLength: 100,
+          },
+          { 
+            key: 'companyNameEnglish', 
+            value: formData.companyNameEnglish,
+            minLength: 5,
+            maxLength: 100,
+          },
+          { key: 'countryLookupId', value: formData.countryLookupId },
+          // Only require state if country is selected and states are available
+          { 
+            key: 'stateLookupId', 
+            value: formData.stateLookupId,
+            condition: formData.countryLookupId && filteredStates.length > 0,
+          },
+          { 
+            key: 'ticketShortCode', 
+            value: formData.ticketShortCode,
+            maxLength: 6,
+          },
+        ];
+
+        const invalid = new Set<string>();
+        const lengthErrors: Record<string, string> = {};
+
+        requiredFields.forEach((field) => {
+          // Skip validation if condition is false
+          if ('condition' in field && !field.condition) {
+            return;
+          }
+
+          const value = typeof field.value === 'string' ? field.value.trim() : field.value;
+
+          // Check if empty
+          if (!value || value === '') {
+            invalid.add(field.key);
+
+            return;
+          }
+
+          // Check length constraints
+          if ('minLength' in field && 'maxLength' in field && typeof value === 'string') {
+            const minLength = 'minLength' in field ? field.minLength : undefined;
+            const maxLength = 'maxLength' in field ? field.maxLength : undefined;
+
+            if (minLength !== undefined && value.length < minLength) {
+              invalid.add(field.key);
+              lengthErrors[field.key] = `must be at least ${minLength} characters`;
+            } else if (maxLength !== undefined && value.length > maxLength) {
+              invalid.add(field.key);
+              lengthErrors[field.key] = `must be at most ${maxLength} characters`;
+            }
+          }
+        });
+
+        if (invalid.size > 0) {
+          setInvalidFields(invalid);
+
+          // Map field keys to display names
+          const fieldNameMap: Record<string, string> = {
+            companyTitle: appText.companyWizard.basicInfo.companyTitle,
+            companyNameArabic: appText.companyWizard.basicInfo.companyNameArabic,
+            companyNameEnglish: appText.companyWizard.basicInfo.companyNameEnglish,
+            countryLookupId: appText.companyWizard.basicInfo.country,
+            stateLookupId: appText.companyWizard.basicInfo.state,
+            ticketShortCode: appText.companyWizard.contracts.ticketShortCode,
+          };
+
+          // Create bullet list of invalid fields with error details
+          const invalidFieldNames = Array.from(invalid)
+            .map((key) => {
+              const fieldName = fieldNameMap[key] || key;
+              const lengthError = lengthErrors[key];
+
+              return `• ${fieldName}${lengthError ? ` (${lengthError})` : ''}`;
+            })
+            .join('<br>');
+
+          // Focus on first invalid field
+          setTimeout(() => {
+            const firstInvalidField = Array.from(invalid)[0];
+            const element = document.querySelector(`[name="${firstInvalidField}"]`) as HTMLElement;
+
+            if (element) {
+              element.focus();
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+
           Swal.fire({
             icon: 'warning',
+            html: `
+              <div style="text-align: left;">
+                <p style="margin-bottom: 10px;">Please fill in all required fields in Basic Info step:</p>
+                <div style="margin-left: 20px;">
+                  ${invalidFieldNames}
+                </div>
+              </div>
+            `,
             title: 'Validation Error',
-            text: 'Please fill in all required fields in Basic Info step.',
           });
 
           return false;
         }
+
+        setInvalidFields(new Set());
 
         return true;
 
       case 2: // Contracts
-        if (!formData.contractTitle || !formData.businessModelLookupId || !formData.managedByLookupId) {
+        const contractInvalid = new Set<string>();
+        const contractErrors: Record<string, string> = {};
+
+        // Check required fields
+        if (!formData.contractTitle) {
+          contractInvalid.add('contractTitle');
+        }
+
+        if (!formData.businessModelLookupId) {
+          contractInvalid.add('businessModelLookupId');
+        }
+
+        if (!formData.managedByLookupId) {
+          contractInvalid.add('managedByLookupId');
+        }
+
+        // Check dates
+        if (!formData.contractStartDate) {
+          contractInvalid.add('contractStartDate');
+        }
+
+        if (!formData.contractEndDate) {
+          contractInvalid.add('contractEndDate');
+        } else if (formData.contractStartDate && formData.contractEndDate) {
+          // Validate End Date >= Start Date
+          const startDate = new Date(formData.contractStartDate);
+          const endDate = new Date(formData.contractEndDate);
+
+          if (endDate < startDate) {
+            contractInvalid.add('contractEndDate');
+            contractErrors.contractEndDate = 'must be greater than or equal to Start Date';
+          }
+
+          // Validate Start Date <= End Date
+          if (startDate > endDate) {
+            contractInvalid.add('contractStartDate');
+            contractErrors.contractStartDate = 'must be less than or equal to End Date';
+          }
+        }
+
+        if (contractInvalid.size > 0) {
+          setInvalidFields(contractInvalid);
+
+          // Map field keys to display names
+          const contractFieldNameMap: Record<string, string> = {
+            contractTitle: appText.companyWizard.contracts.contractTitle,
+            businessModelLookupId: appText.companyWizard.contracts.businessModel,
+            managedByLookupId: appText.companyWizard.contracts.managedBy,
+            contractStartDate: appText.companyWizard.contracts.contractStartDate,
+            contractEndDate: appText.companyWizard.contracts.contractEndDate,
+          };
+
+          // Create bullet list of invalid fields with error details
+          const invalidFieldNames = Array.from(contractInvalid)
+            .map((key) => {
+              const fieldName = contractFieldNameMap[key] || key;
+              const error = contractErrors[key];
+
+              return `• ${fieldName}${error ? ` (${error})` : ''}`;
+            })
+            .join('<br>');
+
+          // Focus on first invalid field
+          setTimeout(() => {
+            const firstInvalidField = Array.from(contractInvalid)[0];
+            const element = document.querySelector(`[name="${firstInvalidField}"]`) as HTMLElement;
+
+            if (element) {
+              element.focus();
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+
           Swal.fire({
             icon: 'warning',
+            html: `
+              <div style="text-align: left;">
+                <p style="margin-bottom: 10px;">Please fill in all required fields in Contracts step:</p>
+                <div style="margin-left: 20px;">
+                  ${invalidFieldNames}
+                </div>
+              </div>
+            `,
             title: 'Validation Error',
-            text: 'Please fill in all required fields in Contracts step.',
           });
 
           return false;
         }
+
+        setInvalidFields(new Set());
 
         return true;
 
       case 3: // User Roles
-        if (!formData.fullNameAr || !formData.fullNameEn || !formData.mobileNumber || !formData.email) {
+        const userRolesInvalid = new Set<string>();
+        const userRolesErrors: Record<string, string> = {};
+
+        // Validate Full Name Arabic
+        if (!formData.fullNameAr || formData.fullNameAr.trim() === '') {
+          userRolesInvalid.add('fullNameAr');
+        } else if (formData.fullNameAr.trim().length < 5) {
+          userRolesInvalid.add('fullNameAr');
+          userRolesErrors.fullNameAr = 'must be at least 5 characters';
+        } else if (formData.fullNameAr.trim().length > 50) {
+          userRolesInvalid.add('fullNameAr');
+          userRolesErrors.fullNameAr = 'must be at most 50 characters';
+        }
+
+        // Validate Full Name English
+        if (!formData.fullNameEn || formData.fullNameEn.trim() === '') {
+          userRolesInvalid.add('fullNameEn');
+        } else if (formData.fullNameEn.trim().length < 5) {
+          userRolesInvalid.add('fullNameEn');
+          userRolesErrors.fullNameEn = 'must be at least 5 characters';
+        } else if (formData.fullNameEn.trim().length > 50) {
+          userRolesInvalid.add('fullNameEn');
+          userRolesErrors.fullNameEn = 'must be at most 50 characters';
+        }
+
+        // Validate Mobile Number
+        if (!formData.mobileNumber || formData.mobileNumber.trim() === '') {
+          userRolesInvalid.add('mobileNumber');
+        }
+
+        // Email is optional, no validation needed
+
+        if (userRolesInvalid.size > 0) {
+          setInvalidFields(userRolesInvalid);
+
+          const fieldNameMap: Record<string, string> = {
+            fullNameAr: appText.companyWizard.userRoles.fullNameAr,
+            fullNameEn: appText.companyWizard.userRoles.fullNameEn,
+            mobileNumber: appText.companyWizard.userRoles.mobileNumber,
+            email: appText.companyWizard.userRoles.emailAddress,
+          };
+
+          const invalidFieldNames = Array.from(userRolesInvalid)
+            .map((key) => {
+              const fieldName = fieldNameMap[key] || key;
+              const error = userRolesErrors[key];
+
+              return `• ${fieldName}${error ? ` (${error})` : ''}`;
+            })
+            .join('<br>');
+
+          setTimeout(() => {
+            const firstInvalidField = Array.from(userRolesInvalid)[0];
+            const element = document.querySelector(`[name="${firstInvalidField}"]`) as HTMLElement;
+
+            if (element) {
+              element.focus();
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+
           Swal.fire({
             icon: 'warning',
             title: 'Validation Error',
-            text: 'Please fill in all required fields in User Roles step.',
+            html: `Please fill in all required fields in User Roles step:<br>${invalidFieldNames}`,
           });
 
           return false;
         }
+
+        setInvalidFields(new Set());
 
         return true;
 
       case 4: // Branches
-        if (!formData.branchTitle || !formData.branchNameArabic || !formData.branchNameEnglish) {
+        const branchesInvalid = new Set<string>();
+        const branchesErrors: Record<string, string> = {};
+
+        // Check required fields
+        if (!formData.branchTitle || formData.branchTitle.trim() === '') {
+          branchesInvalid.add('branchTitle');
+        }
+
+        if (!formData.branchNameArabic || formData.branchNameArabic.trim() === '') {
+          branchesInvalid.add('branchNameArabic');
+        }
+
+        if (!formData.branchNameEnglish || formData.branchNameEnglish.trim() === '') {
+          branchesInvalid.add('branchNameEnglish');
+        }
+
+        if (!formData.branchRepresentativeName || formData.branchRepresentativeName.trim() === '') {
+          branchesInvalid.add('branchRepresentativeName');
+        }
+
+        if (!formData.representativeMobileNumber || formData.representativeMobileNumber.trim() === '') {
+          branchesInvalid.add('representativeMobileNumber');
+        }
+
+        if (branchesInvalid.size > 0) {
+          setInvalidFields(branchesInvalid);
+
+          const fieldNameMap: Record<string, string> = {
+            branchTitle: appText.companyWizard.branches.branchTitle,
+            branchNameArabic: appText.companyWizard.branches.branchNameArabic,
+            branchNameEnglish: appText.companyWizard.branches.branchNameEnglish,
+            branchRepresentativeName: appText.companyWizard.branches.branchRepresentativeName,
+            representativeMobileNumber: appText.companyWizard.branches.representativeMobileNumber,
+          };
+
+          const invalidFieldNames = Array.from(branchesInvalid)
+            .map((key) => {
+              const fieldName = fieldNameMap[key] || key;
+              const error = branchesErrors[key];
+
+              return `• ${fieldName}${error ? ` (${error})` : ''}`;
+            })
+            .join('<br>');
+
+          setTimeout(() => {
+            const firstInvalidField = Array.from(branchesInvalid)[0];
+            const element = document.querySelector(`[name="${firstInvalidField}"]`) as HTMLElement;
+
+            if (element) {
+              element.focus();
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+
           Swal.fire({
             icon: 'warning',
             title: 'Validation Error',
-            text: 'Please fill in all required fields in Branches step.',
+            html: `Please fill in all required fields in Branches step:<br>${invalidFieldNames}`,
           });
 
           return false;
         }
+
+        setInvalidFields(new Set());
 
         return true;
 
       case 5: // Zones
-        if (!formData.zoneTitle) {
+        const zonesInvalid = new Set<string>();
+        const zonesErrors: Record<string, string> = {};
+
+        // Check required fields
+        if (!formData.zoneTitle || formData.zoneTitle.trim() === '') {
+          zonesInvalid.add('zoneTitle');
+        }
+
+        // Check if branch is selected (from previous step)
+        if (!formData.branchTitle || formData.branchTitle.trim() === '') {
+          zonesInvalid.add('branch');
+        }
+
+        if (zonesInvalid.size > 0) {
+          setInvalidFields(zonesInvalid);
+
+          const fieldNameMap: Record<string, string> = {
+            zoneTitle: appText.companyWizard.zones.zoneTitle,
+            branch: appText.companyWizard.zones.branch,
+          };
+
+          const invalidFieldNames = Array.from(zonesInvalid)
+            .map((key) => {
+              const fieldName = fieldNameMap[key] || key;
+              const error = zonesErrors[key];
+
+              return `• ${fieldName}${error ? ` (${error})` : ''}`;
+            })
+            .join('<br>');
+
+          setTimeout(() => {
+            const firstInvalidField = Array.from(zonesInvalid)[0];
+            const element = document.querySelector(`[name="${firstInvalidField}"]`) as HTMLElement;
+
+            if (element) {
+              element.focus();
+              element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }, 100);
+
           Swal.fire({
             icon: 'warning',
             title: 'Validation Error',
-            text: 'Please fill in all required fields in Zones step.',
+            html: `Please fill in all required fields in Zones step:<br>${invalidFieldNames}`,
           });
 
           return false;
         }
+
+        setInvalidFields(new Set());
 
         return true;
 
@@ -600,6 +1195,25 @@ interface SubService {
       // Generate company ID
       const companyId = generateCompanyId(formData.companyTitle);
 
+      // Upload logo if provided
+      let logoPath: string | null = null;
+
+      if (formData.logo) {
+        try {
+          logoPath = await uploadFile(formData.logo, 'image');
+        } catch (error) {
+          console.error('Error uploading logo:', error);
+          await Swal.fire({
+            icon: 'error',
+            title: 'Logo Upload Failed',
+            text: error instanceof Error ? error.message : 'Failed to upload company logo. Please try again.',
+          });
+          setLoading(false);
+
+          return;
+        }
+      }
+
       // Step 1: Create Company
       const createCompanyMutation = `
         mutation CreateCompany($companyData: CreateCompanyInput!) {
@@ -620,12 +1234,11 @@ interface SubService {
         companyNameArabic: formData.companyNameArabic || null,
         companyNameEnglish: formData.companyNameEnglish || null,
         countryLookupId: formData.countryLookupId || null,
-        establishedTypeLookupId: formData.establishedTypeLookupId || null,
         hoAddress: formData.hoAddress || null,
         hoLocation: formData.hoLocation || null,
+        ticketShortCode: formData.ticketShortCode || null,
         isActive: formData.isActive ? 'ACTIVE' : 'INACTIVE',
-        numberOfBranches: formData.numberOfBranch || 0,
-        logo: null, // TODO: Handle logo upload if needed
+        logo: logoPath,
       };
 
       const companyResponse = await fetch(GRAPHQL_ENDPOINT, {
@@ -633,7 +1246,7 @@ interface SubService {
           query: createCompanyMutation,
           variables: { companyData },
         }),
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         method: 'POST',
       });
 
@@ -670,7 +1283,6 @@ interface SubService {
         businessModelLookupId: formData.businessModelLookupId,
         isActive: formData.isActive,
         numberOfTeamLeaders: formData.numberOfTeamLeader || 0,
-        numberOfBranches: formData.numberOfBranch || 0,
         numberOfPreventiveTickets: formData.numberOfPreventiveTickets || 0,
         numberOfCorrectiveTickets: formData.numberOfCorrectiveTickets || 0,
         contractStartDate: formData.contractStartDate || null,
@@ -685,7 +1297,7 @@ interface SubService {
           query: createContractMutation,
           variables: { contractData },
         }),
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         method: 'POST',
       });
 
@@ -722,7 +1334,7 @@ interface SubService {
           query: createBranchMutation,
           variables: { branchData },
         }),
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         method: 'POST',
       });
 
@@ -763,7 +1375,7 @@ interface SubService {
           query: createZoneMutation,
           variables: { zoneData },
         }),
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         method: 'POST',
       });
 
@@ -795,7 +1407,7 @@ interface SubService {
             query: createMaintenanceServiceMutation,
             variables: { serviceData },
           }),
-          headers: { 'Content-Type': 'application/json' },
+          headers: getHeaders(),
           method: 'POST',
         });
       });
@@ -861,10 +1473,6 @@ interface SubService {
 
   const renderBasicInfo = () => (
     <Container className={styles.stepContent}>
-      <Heading className={styles.sectionTitle} level="3">
-        {appText.companyWizard.basicInfo.title}
-      </Heading>
-
       <Form className={styles.form} onSubmit={handleFormSubmit}>
         <Container className={styles.formRow}>
           <Container className={styles.formField}>
@@ -872,13 +1480,16 @@ interface SubService {
               {appText.companyWizard.basicInfo.companyTitle} <span className={styles.required}>*</span>
             </label>
             <InputField
+              maxLength={100}
+              minLength={5}
               name="companyTitle"
               onChange={(e) => handleInputChange('companyTitle', e.target.value)}
               pattern={undefined}
               placeholder={appText.companyWizard.basicInfo.companyTitlePlaceholder}
-              title=""
+              title="Company Title must be between 5 and 100 characters"
               type="text"
               value={formData.companyTitle}
+              className={invalidFields.has('companyTitle') ? styles.inputError : ''}
             />
           </Container>
         </Container>
@@ -889,13 +1500,16 @@ interface SubService {
               {appText.companyWizard.basicInfo.companyNameArabic} <span className={styles.required}>*</span>
             </label>
             <InputField
+              maxLength={100}
+              minLength={5}
               name="companyNameArabic"
               onChange={(e) => handleInputChange('companyNameArabic', e.target.value)}
               pattern={undefined}
               placeholder={appText.companyWizard.basicInfo.companyNameArabicPlaceholder}
-              title=""
+              title="Company Name Arabic must be between 5 and 100 characters"
               type="text"
               value={formData.companyNameArabic}
+              className={invalidFields.has('companyNameArabic') ? styles.inputError : ''}
             />
           </Container>
         </Container>
@@ -906,13 +1520,16 @@ interface SubService {
               {appText.companyWizard.basicInfo.companyNameEnglish} <span className={styles.required}>*</span>
             </label>
             <InputField
+              maxLength={100}
+              minLength={5}
               name="companyNameEnglish"
               onChange={(e) => handleInputChange('companyNameEnglish', e.target.value)}
               pattern={undefined}
               placeholder={appText.companyWizard.basicInfo.companyNameEnglishPlaceholder}
-              title=""
+              title="Company Name English must be between 5 and 100 characters"
               type="text"
               value={formData.companyNameEnglish}
+              className={invalidFields.has('companyNameEnglish') ? styles.inputError : ''}
             />
           </Container>
         </Container>
@@ -923,7 +1540,7 @@ interface SubService {
               {appText.companyWizard.basicInfo.country} <span className={styles.required}>*</span>
             </label>
             <select
-              className={styles.select}
+              className={`${styles.select} ${invalidFields.has('countryLookupId') ? styles.selectError : ''}`}
               onChange={(e) => handleInputChange('countryLookupId', e.target.value)}
               value={formData.countryLookupId}
             >
@@ -947,7 +1564,7 @@ interface SubService {
               return (
                 <>
                   <select
-                    className={styles.select}
+                    className={`${styles.select} ${invalidFields.has('stateLookupId') ? styles.selectError : ''}`}
                     disabled={!formData.countryLookupId || filteredStates.length === 0}
                     onChange={(e) => handleInputChange('stateLookupId', e.target.value)}
                     value={formData.stateLookupId}
@@ -979,20 +1596,27 @@ interface SubService {
         <Container className={styles.formRow}>
           <Container className={styles.formField}>
             <label className={styles.label}>
-              {appText.companyWizard.basicInfo.establishedType} <span className={styles.required}>*</span>
+              {appText.companyWizard.contracts.ticketShortCode} <span className={styles.required}>*</span>
             </label>
-            <select
-              className={styles.select}
-              onChange={(e) => handleInputChange('establishedTypeLookupId', e.target.value)}
-              value={formData.establishedTypeLookupId}
-            >
-              <option value="">{appText.companyWizard.basicInfo.selectType}</option>
-              {establishedTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
+            <Container className={`${styles.ticketShortCodeContainer} ${invalidFields.has('ticketShortCode') ? styles.ticketShortCodeContainerError : ''}`}>
+              <span className={styles.ticketPrefix}>TKT-</span>
+              <input
+                className={styles.ticketShortCodeInput}
+                maxLength={6}
+                name="ticketShortCode"
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  handleInputChange('ticketShortCode', value);
+                }}
+                placeholder="XXXXXX"
+                type="text"
+                value={formData.ticketShortCode.replace('TKT-', '')}
+              />
+            </Container>
+            <Paragraph className={styles.helperText}>
+              {appText.companyWizard.contracts.ticketShortCodeHelper}
+            </Paragraph>
           </Container>
         </Container>
 
@@ -1049,13 +1673,10 @@ interface SubService {
 
   const renderContracts = () => (
     <Container className={styles.stepContent}>
-      <Heading className={styles.sectionTitle} level="3">
-        {appText.companyWizard.contracts.title}
-      </Heading>
-
       <Form className={styles.form} onSubmit={handleFormSubmit}>
+        {/* 2 Columns */}
         <Container className={styles.formRow}>
-          <Container className={styles.formField}>
+          <Container className={`${styles.formField} ${styles.formFieldFixedWidth}`}>
             <label className={styles.label}>
               {appText.companyWizard.contracts.contractTitle} <span className={styles.required}>*</span>
             </label>
@@ -1067,17 +1688,37 @@ interface SubService {
               title=""
               type="text"
               value={formData.contractTitle}
+              className={invalidFields.has('contractTitle') ? styles.inputError : ''}
             />
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.contracts.contractValue}
+            </label>
+            <Container className={styles.currencyInputContainer}>
+              <span className={styles.currencyPrefix}>JD</span>
+              <InputField
+                name="contractValue"
+                onChange={(e) => handleInputChange('contractValue', e.target.value)}
+                pattern="[0-9.]*"
+                placeholder={appText.companyWizard.contracts.contractValuePlaceholder}
+                title="Only numbers are allowed (max 7 characters)"
+                type="text"
+                maxLength={7}
+                value={formData.contractValue}
+              />
+            </Container>
           </Container>
         </Container>
 
+        {/* 2 Columns */}
         <Container className={styles.formRow}>
-          <Container className={styles.formField}>
+          <Container className={`${styles.formField} ${styles.formFieldFixedWidth}`}>
             <label className={styles.label}>
               {appText.companyWizard.contracts.businessModel} <span className={styles.required}>*</span>
             </label>
             <select
-              className={styles.select}
+              className={`${styles.select} ${invalidFields.has('businessModelLookupId') ? styles.selectError : ''}`}
               onChange={(e) => handleInputChange('businessModelLookupId', e.target.value)}
               value={formData.businessModelLookupId}
             >
@@ -1094,7 +1735,7 @@ interface SubService {
               {appText.companyWizard.contracts.managedBy} <span className={styles.required}>*</span>
             </label>
             <select
-              className={styles.select}
+              className={`${styles.select} ${invalidFields.has('managedByLookupId') ? styles.selectError : ''}`}
               onChange={(e) => handleInputChange('managedByLookupId', e.target.value)}
               value={formData.managedByLookupId}
             >
@@ -1105,43 +1746,6 @@ interface SubService {
                 </option>
               ))}
             </select>
-          </Container>
-        </Container>
-
-        <Container className={styles.formRow}>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              {appText.companyWizard.contracts.ticketShortCode} <span className={styles.required}>*</span>
-            </label>
-            <InputField
-              name="ticketShortCode"
-              onChange={(e) => handleInputChange('ticketShortCode', e.target.value)}
-              pattern={undefined}
-              placeholder={appText.companyWizard.contracts.ticketShortCodePlaceholder}
-              title=""
-              type="text"
-              value={formData.ticketShortCode}
-            />
-            <Paragraph className={styles.helperText}>
-              {appText.companyWizard.contracts.ticketShortCodeHelper}
-            </Paragraph>
-          </Container>
-          <Container className={styles.formField}>
-            <label className={styles.label}>{appText.companyWizard.contracts.isActive}</label>
-            <Container className={styles.toggleContainer}>
-              <label className={styles.toggleLabel}>
-                <input
-                  checked={formData.isActive}
-                  className={styles.toggleInput}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, isActive: e.target.checked }))}
-                  type="checkbox"
-                />
-                <span className={`${styles.toggleSlider} ${formData.isActive ? styles.toggleActive : ''}`}></span>
-                <span className={styles.toggleText}>
-                  {formData.isActive ? appText.companyWizard.contracts.active : appText.companyWizard.contracts.inactive}
-                </span>
-              </label>
-            </Container>
           </Container>
         </Container>
 
@@ -1180,26 +1784,6 @@ interface SubService {
               <Button
                 className={styles.counterButton}
                 onClick={() => handleNumberChange('numberOfTeamLeader', 1)}
-                type="button"
-              >
-                +
-              </Button>
-            </Container>
-          </Container>
-          <Container className={styles.numberCounter}>
-            <label className={styles.label}>{appText.companyWizard.contracts.numberOfBranch}</label>
-            <Container className={styles.counterControls}>
-              <Button
-                className={styles.counterButton}
-                onClick={() => handleNumberChange('numberOfBranch', -1)}
-                type="button"
-              >
-                -
-              </Button>
-              <span className={styles.counterValue}>{formData.numberOfBranch}</span>
-              <Button
-                className={styles.counterButton}
-                onClick={() => handleNumberChange('numberOfBranch', 1)}
                 type="button"
               >
                 +
@@ -1272,35 +1856,66 @@ interface SubService {
         </Container>
 
         <Container className={styles.formRow}>
-          <Container className={styles.formField}>
+          <Container className={styles.dateField}>
             <label className={styles.label}>
               <i className="fas fa-calendar" style={{ marginRight: '8px' }}></i>
               {appText.companyWizard.contracts.contractStartDate} <span className={styles.required}>*</span>
             </label>
             <InputField
               name="contractStartDate"
-              onChange={(e) => handleInputChange('contractStartDate', e.target.value)}
+              onChange={(e) => {
+                handleInputChange('contractStartDate', e.target.value);
+                // Clear end date error if start date changes
+
+                if (invalidFields.has('contractEndDate')) {
+                  const newInvalidFields = new Set(invalidFields);
+
+                  newInvalidFields.delete('contractEndDate');
+                  setInvalidFields(newInvalidFields);
+                }
+              }}
               pattern={undefined}
               placeholder={appText.companyWizard.contracts.datePlaceholder}
-              title=""
+              title={formData.contractEndDate ? `Start Date must be on or before ${formData.contractEndDate}` : 'Start Date must be less than or equal to End Date'}
               type="date"
+              max={formData.contractEndDate || undefined}
               value={formData.contractStartDate}
+              className={invalidFields.has('contractStartDate') ? styles.inputError : ''}
             />
           </Container>
-          <Container className={styles.formField}>
+          <Container className={styles.dateField}>
             <label className={styles.label}>
               <i className="fas fa-calendar" style={{ marginRight: '8px' }}></i>
               {appText.companyWizard.contracts.contractEndDate} <span className={styles.required}>*</span>
             </label>
             <InputField
+              min={formData.contractStartDate || undefined}
               name="contractEndDate"
               onChange={(e) => handleInputChange('contractEndDate', e.target.value)}
               pattern={undefined}
               placeholder={appText.companyWizard.contracts.datePlaceholder}
-              title=""
+              title={formData.contractStartDate ? `End Date must be on or after ${formData.contractStartDate}` : 'End Date must be greater than or equal to Start Date'}
               type="date"
               value={formData.contractEndDate}
+              className={invalidFields.has('contractEndDate') ? styles.inputError : ''}
             />
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>{appText.companyWizard.contracts.isActive}</label>
+            <Container className={styles.toggleContainer}>
+              <label className={styles.toggleLabel}>
+                <input
+                  checked={formData.isActive}
+                  className={styles.toggleInput}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, isActive: e.target.checked }))}
+                  type="checkbox"
+                />
+                <span className={`${styles.toggleSlider} ${formData.isActive ? styles.toggleActive : ''}`}></span>
+                <span className={styles.toggleText}>
+                  {formData.isActive ? appText.companyWizard.contracts.active : appText.companyWizard.contracts.inactive}
+                </span>
+              </label>
+            </Container>
           </Container>
         </Container>
 
@@ -1354,34 +1969,37 @@ interface SubService {
           </Container>
         </Container>
 
-        <Container className={styles.formRow}>
-          <Container className={styles.formField}>
-            <Heading className={styles.sectionSubtitle} level="4">
-              <i className="fas fa-dollar-sign" style={{ marginRight: '8px' }}></i>
-              {appText.companyWizard.contracts.contractValue}
-            </Heading>
-            <InputField
-              name="contractValue"
-              onChange={(e) => handleInputChange('contractValue', e.target.value)}
-              pattern={undefined}
-              placeholder={appText.companyWizard.contracts.contractValuePlaceholder}
-              title=""
-              type="text"
-              value={formData.contractValue}
-            />
-          </Container>
-        </Container>
       </Form>
     </Container>
   );
 
   const renderUserRoles = () => (
     <Container className={styles.stepContent}>
-      <Heading className={styles.sectionTitle} level="3">
-        {appText.companyWizard.userRoles.title}
-      </Heading>
-
       <Form className={styles.form} onSubmit={handleFormSubmit}>
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              <i className="fas fa-user-tie" style={{ marginRight: '8px' }}></i>
+              {appText.companyWizard.userRoles.teamLeaderReadonly}
+            </label>
+            <select
+              className={styles.select}
+              disabled
+              value={formData.userRolesTeamLeaderId}
+            >
+              <option value="">{appText.companyWizard.branches.selectTeamLeader}</option>
+              {teamLeaders.map((leader) => (
+                <option key={leader.id} value={leader.id}>
+                  {leader.name}
+                </option>
+              ))}
+            </select>
+            <Paragraph className={styles.helperText}>
+              This team leader will be used for all branches
+            </Paragraph>
+          </Container>
+        </Container>
+
         <Container className={styles.formRow}>
           <Container className={styles.formField}>
             <label className={styles.label}>
@@ -1393,9 +2011,12 @@ interface SubService {
               onChange={(e) => handleInputChange('fullNameAr', e.target.value)}
               pattern={undefined}
               placeholder={appText.companyWizard.userRoles.fullNameArPlaceholder}
-              title=""
+              title="Full Name Arabic must be between 5 and 50 characters"
               type="text"
+              minLength={5}
+              maxLength={50}
               value={formData.fullNameAr}
+              className={invalidFields.has('fullNameAr') ? styles.inputError : ''}
             />
           </Container>
           <Container className={styles.formField}>
@@ -1408,9 +2029,12 @@ interface SubService {
               onChange={(e) => handleInputChange('fullNameEn', e.target.value)}
               pattern={undefined}
               placeholder={appText.companyWizard.userRoles.fullNameEnPlaceholder}
-              title=""
+              title="Full Name English must be between 5 and 50 characters"
               type="text"
+              minLength={5}
+              maxLength={50}
               value={formData.fullNameEn}
+              className={invalidFields.has('fullNameEn') ? styles.inputError : ''}
             />
           </Container>
         </Container>
@@ -1466,10 +2090,11 @@ interface SubService {
             <InputField
               name="mobileNumber"
               onChange={(e) => handleInputChange('mobileNumber', e.target.value)}
-              pattern={undefined}
+              pattern="[0-9]*"
               placeholder={appText.companyWizard.userRoles.mobileNumberPlaceholder}
-              title=""
+              title="Only numbers are allowed (max 15 characters)"
               type="tel"
+              maxLength={15}
               value={formData.mobileNumber}
             />
             <Paragraph className={styles.helperText}>
@@ -1499,30 +2124,6 @@ interface SubService {
         <Container className={styles.formRow}>
           <Container className={styles.formField}>
             <label className={styles.label}>
-              <i className="fas fa-user-tie" style={{ marginRight: '8px' }}></i>
-              {appText.companyWizard.userRoles.teamLeaderReadonly}
-            </label>
-            <select
-              className={styles.select}
-              disabled
-              value={formData.userRolesTeamLeaderId}
-            >
-              <option value="">{appText.companyWizard.branches.selectTeamLeader}</option>
-              {teamLeaders.map((leader) => (
-                <option key={leader.id} value={leader.id}>
-                  {leader.name}
-                </option>
-              ))}
-            </select>
-            <Paragraph className={styles.helperText}>
-              This team leader will be used for all branches
-            </Paragraph>
-          </Container>
-        </Container>
-
-        <Container className={styles.formRow}>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
               <i className="fas fa-pencil-alt" style={{ marginRight: '8px' }}></i>
               {appText.companyWizard.userRoles.description}
             </label>
@@ -1540,10 +2141,6 @@ interface SubService {
 
   const renderBranches = () => (
     <Container className={styles.stepContent}>
-      <Heading className={styles.sectionTitle} level="3">
-        {appText.companyWizard.branches.title}
-      </Heading>
-
       <Form className={styles.form} onSubmit={handleFormSubmit}>
         <Container className={styles.formRow}>
           <Container className={styles.formField}>
@@ -1558,85 +2155,7 @@ interface SubService {
               title=""
               type="text"
               value={formData.branchTitle}
-            />
-          </Container>
-        </Container>
-
-        <Container className={styles.formRow}>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              {appText.companyWizard.branches.branchNameArabic} <span className={styles.required}>*</span>
-            </label>
-            <InputField
-              name="branchNameArabic"
-              onChange={(e) => handleInputChange('branchNameArabic', e.target.value)}
-              pattern={undefined}
-              placeholder={appText.companyWizard.branches.branchNameArabicPlaceholder}
-              title=""
-              type="text"
-              value={formData.branchNameArabic}
-            />
-          </Container>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              {appText.companyWizard.branches.branchNameEnglish} <span className={styles.required}>*</span>
-            </label>
-            <InputField
-              name="branchNameEnglish"
-              onChange={(e) => handleInputChange('branchNameEnglish', e.target.value)}
-              pattern={undefined}
-              placeholder={appText.companyWizard.branches.branchNameEnglishPlaceholder}
-              title=""
-              type="text"
-              value={formData.branchNameEnglish}
-            />
-          </Container>
-        </Container>
-
-        <Container className={styles.formRow}>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              {appText.companyWizard.branches.branchRepresentativeName} <span className={styles.required}>*</span>
-            </label>
-            <InputField
-              name="branchRepresentativeName"
-              onChange={(e) => handleInputChange('branchRepresentativeName', e.target.value)}
-              pattern={undefined}
-              placeholder={appText.companyWizard.branches.branchRepresentativeNamePlaceholder}
-              title=""
-              type="text"
-              value={formData.branchRepresentativeName}
-            />
-          </Container>
-        </Container>
-
-        <Container className={styles.formRow}>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              {appText.companyWizard.branches.representativeMobileNumber} <span className={styles.required}>*</span>
-            </label>
-            <InputField
-              name="representativeMobileNumber"
-              onChange={(e) => handleInputChange('representativeMobileNumber', e.target.value)}
-              pattern={undefined}
-              placeholder={appText.companyWizard.branches.representativeMobileNumberPlaceholder}
-              title=""
-              type="tel"
-              value={formData.representativeMobileNumber}
-            />
-          </Container>
-          <Container className={styles.formField}>
-            <label className={styles.label}>
-              {appText.companyWizard.branches.representativeEmailAddress}
-            </label>
-            <InputField
-              name="representativeEmailAddress"
-              onChange={(e) => handleInputChange('representativeEmailAddress', e.target.value)}
-              pattern={undefined}
-              placeholder={appText.companyWizard.branches.representativeEmailAddressPlaceholder}
-              title=""
-              type="email"
-              value={formData.representativeEmailAddress}
+              className={invalidFields.has('branchTitle') ? styles.inputError : ''}
             />
           </Container>
         </Container>
@@ -1669,6 +2188,7 @@ interface SubService {
                 <input
                   checked={formData.branchIsActive}
                   className={styles.toggleInput}
+                  disabled
                   onChange={(e) => setFormData((prev) => ({ ...prev, branchIsActive: e.target.checked }))}
                   type="checkbox"
                 />
@@ -1680,6 +2200,90 @@ interface SubService {
             </Container>
           </Container>
         </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.branchNameArabic} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="branchNameArabic"
+              onChange={(e) => handleInputChange('branchNameArabic', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.branchNameArabicPlaceholder}
+              title=""
+              type="text"
+              value={formData.branchNameArabic}
+              className={invalidFields.has('branchNameArabic') ? styles.inputError : ''}
+            />
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.branchNameEnglish} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="branchNameEnglish"
+              onChange={(e) => handleInputChange('branchNameEnglish', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.branchNameEnglishPlaceholder}
+              title=""
+              type="text"
+              value={formData.branchNameEnglish}
+              className={invalidFields.has('branchNameEnglish') ? styles.inputError : ''}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.branchRepresentativeName} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="branchRepresentativeName"
+              onChange={(e) => handleInputChange('branchRepresentativeName', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.branchRepresentativeNamePlaceholder}
+              title=""
+              type="text"
+              value={formData.branchRepresentativeName}
+              className={invalidFields.has('branchRepresentativeName') ? styles.inputError : ''}
+            />
+          </Container>
+        </Container>
+
+        <Container className={styles.formRow}>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.representativeMobileNumber} <span className={styles.required}>*</span>
+            </label>
+            <InputField
+              name="representativeMobileNumber"
+              onChange={(e) => handleInputChange('representativeMobileNumber', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.representativeMobileNumberPlaceholder}
+              title=""
+              type="tel"
+              value={formData.representativeMobileNumber}
+              className={invalidFields.has('representativeMobileNumber') ? styles.inputError : ''}
+            />
+          </Container>
+          <Container className={styles.formField}>
+            <label className={styles.label}>
+              {appText.companyWizard.branches.representativeEmailAddress}
+            </label>
+            <InputField
+              name="representativeEmailAddress"
+              onChange={(e) => handleInputChange('representativeEmailAddress', e.target.value)}
+              pattern={undefined}
+              placeholder={appText.companyWizard.branches.representativeEmailAddressPlaceholder}
+              title=""
+              type="email"
+              value={formData.representativeEmailAddress}
+            />
+          </Container>
+        </Container>
+
       </Form>
     </Container>
   );
@@ -1689,10 +2293,6 @@ interface SubService {
 
     return (
       <Container className={styles.stepContent}>
-        <Heading className={styles.sectionTitle} level="3">
-          {appText.companyWizard.zones.title}
-        </Heading>
-
         <Form className={styles.form} onSubmit={handleFormSubmit}>
           <Container className={styles.formRow}>
             <Container className={styles.formField}>
@@ -1725,6 +2325,7 @@ interface SubService {
               title=""
               type="text"
               value={formData.zoneTitle}
+              className={invalidFields.has('zoneTitle') ? styles.inputError : ''}
             />
           </Container>
           <Container className={styles.formField}>
@@ -1810,10 +2411,6 @@ interface SubService {
 
   const renderMaintenanceServices = () => (
     <Container className={styles.stepContent}>
-      <Heading className={styles.sectionTitle} level="3">
-        {appText.companyWizard.maintenanceServices.title}
-      </Heading>
-
       <Form className={styles.form} onSubmit={handleFormSubmit}>
         <Container className={styles.formRow}>
           <Container className={styles.formField}>
@@ -1923,9 +2520,29 @@ interface SubService {
   return (
     <Container className={styles.modalOverlay} onClick={onClose}>
       <Container className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        {/* Test Data Fill Button - Only visible in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <Container
+            style={{
+              position: 'fixed',
+              bottom: '20px',
+              right: '20px',
+              zIndex: 1000,
+            }}
+            title="Fill test data (Ctrl+Shift+T)"
+          >
+            <Button
+              type="button"
+              onClick={fillTestData}
+              className={styles.testDataButton}
+            >
+              🧪 Fill Test Data
+            </Button>
+          </Container>
+        )}
         <Container className={styles.modalHeader}>
           <Heading className={styles.modalTitle} level="2">
-            {appText.companyWizard.title}
+            {appText.companyWizard.title}: <span className={styles.stepTitle}>{steps.find((s) => s.number === currentStep)?.label}</span>
           </Heading>
           <Button className={styles.closeButton} onClick={onClose} type="button">
             <i className="fas fa-times"></i>
@@ -1949,12 +2566,14 @@ interface SubService {
           ))}
         </Container>
 
-        {currentStep === 1 && renderBasicInfo()}
-        {currentStep === 2 && renderContracts()}
-        {currentStep === 3 && renderUserRoles()}
-        {currentStep === 4 && renderBranches()}
-        {currentStep === 5 && renderZones()}
-        {currentStep === 6 && renderMaintenanceServices()}
+        <Container className={styles.stepContentWrapper}>
+          {currentStep === 1 && renderBasicInfo()}
+          {currentStep === 2 && renderContracts()}
+          {currentStep === 3 && renderUserRoles()}
+          {currentStep === 4 && renderBranches()}
+          {currentStep === 5 && renderZones()}
+          {currentStep === 6 && renderMaintenanceServices()}
+        </Container>
 
         <Container className={styles.modalFooter}>
           <Button className={styles.cancelButton} onClick={onClose} type="button">

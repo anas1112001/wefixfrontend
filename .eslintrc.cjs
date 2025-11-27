@@ -39,6 +39,7 @@ module.exports = {
     'jest',
     'prefer-arrow',
     'prettier',
+    'react-hooks',
     'sort-destructure-keys',
     'sort-export-all',
     'typescript-sort-keys',
@@ -157,6 +158,8 @@ module.exports = {
     // 'react/prop-types': 'off',
     // 'react/react-in-jsx-scope': 'off',
     // 'react/self-closing-comp': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+    'react-hooks/rules-of-hooks': 'error',
     'sort-destructure-keys/sort-destructure-keys': 2,
     'sort-export-all/sort-export-all': [
       'error',

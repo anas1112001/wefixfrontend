@@ -1,6 +1,6 @@
 /**
  * Get the GraphQL API endpoint URL
- * Uses Netlify proxy in production to avoid CORS issues
+ * Uses direct connection or proxy based on environment
  */
 export const getGraphQLEndpoint = (): string => {
   // If custom API URL is set via environment variable, use it
@@ -8,9 +8,11 @@ export const getGraphQLEndpoint = (): string => {
     return process.env.REACT_APP_API_URL;
   }
 
-  // In production (Netlify), use the proxy endpoint
+  // In production, use direct connection to backend
+  // (API proxy requires ARR module which may not be installed)
   if (process.env.NODE_ENV === 'production') {
-    return '/api/graphql';
+    // Use direct connection to backend (CORS is configured)
+    return 'http://localhost:4000/graphql';
   }
 
   // Default to localhost for development
@@ -18,4 +20,5 @@ export const getGraphQLEndpoint = (): string => {
 };
 
 export const GRAPHQL_ENDPOINT = getGraphQLEndpoint();
+
 

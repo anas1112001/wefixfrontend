@@ -1,0 +1,430 @@
+/* Modern App Header - Compatible with Current Page Colors */
+
+.header {
+  align-items: center;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5f0 100%);
+  border-bottom: 2px solid rgba(255, 107, 53, 0.15);
+  display: flex;
+  height: 75px;
+  justify-content: space-between;
+  padding: 0 16px;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(255, 107, 53, 0.08);
+  backdrop-filter: blur(10px);
+  gap: 12px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Left Section - User Avatar & Name + Navigation */
+.leftSection {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+/* Left Navigation */
+.leftNav {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.navItem {
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: #4a5568;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+  font-weight: 600;
+  gap: 3px;
+  padding: 8px 10px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.navItem::before {
+  content: '';
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  border-radius: 12px;
+  height: 100%;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  transition: opacity 0.3s ease;
+  width: 100%;
+  z-index: -1;
+}
+
+.navItem:hover {
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.navItem:hover::before {
+  opacity: 1;
+}
+
+.navItem:active {
+  transform: translateY(0);
+}
+
+.navItem i {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.navItem:hover i {
+  transform: scale(1.1);
+}
+
+.navItem span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: color 0.3s ease;
+}
+
+/* Center Logo - Modern WeFix Style */
+.logoContainer {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.logoSquare {
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(247, 147, 30, 0.1) 100%);
+  border: 3px solid #ff6b35;
+  border-radius: 8px;
+  height: 45px;
+  position: absolute;
+  width: 45px;
+  z-index: 1;
+  transform: rotate(-5deg);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.logoContainer:hover .logoSquare {
+  transform: rotate(-3deg) scale(1.05);
+}
+
+.logoText {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.9rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  position: relative;
+  z-index: 2;
+  text-shadow: none;
+  transition: all 0.3s ease;
+}
+
+.logoContainer:hover .logoText {
+  transform: scale(1.05);
+}
+
+.logoCheckmark {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  border-bottom: 4px solid #ff6b35;
+  border-radius: 4px;
+  border-right: 4px solid #ff6b35;
+  height: 22px;
+  position: absolute;
+  right: -10px;
+  top: -6px;
+  transform: rotate(45deg);
+  width: 14px;
+  z-index: 3;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+.logoCheckmark::before {
+  background: #ff6b35;
+  border-radius: 50%;
+  content: '';
+  height: 10px;
+  position: absolute;
+  right: -5px;
+  top: -5px;
+  width: 10px;
+  box-shadow: 0 2px 6px rgba(255, 107, 53, 0.4);
+}
+
+/* Right Info Section */
+.rightInfo {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.infoItem {
+  align-items: center;
+  background: rgba(255, 107, 53, 0.05);
+  border-radius: 10px;
+  display: flex;
+  gap: 6px;
+  padding: 6px 10px;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.infoItem:hover {
+  background: rgba(255, 107, 53, 0.1);
+  transform: translateY(-1px);
+}
+
+.weatherTemp {
+  color: #ff6b35;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.weatherIcon {
+  color: #f7931e;
+  font-size: 1.1rem;
+  filter: drop-shadow(0 2px 4px rgba(247, 147, 30, 0.3));
+}
+
+.timeText {
+  color: #333;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.prayerIcon {
+  color: #ff6b35;
+  font-size: 1.1rem;
+  filter: drop-shadow(0 2px 4px rgba(255, 107, 53, 0.3));
+}
+
+.prayerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prayerName {
+  color: #ff6b35;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.prayerTime {
+  color: #666;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* User Avatar */
+.userAvatar {
+  position: relative;
+}
+
+.avatarImage {
+  border: 2px solid #ff6b35;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  height: 40px;
+  object-fit: cover;
+  transition: all 0.3s ease;
+  width: 40px;
+}
+
+.userAvatar:hover .avatarImage {
+  border-color: #f7931e;
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+  transform: scale(1.05);
+}
+
+.avatarInitials {
+  align-items: center;
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  border: 2px solid #ff6b35;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+  color: var(--white);
+  display: flex;
+  font-size: 0.9rem;
+  font-weight: 800;
+  height: 40px;
+  justify-content: center;
+  transition: all 0.3s ease;
+  width: 40px;
+}
+
+.userAvatar:hover .avatarInitials {
+  border-color: #f7931e;
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+  transform: scale(1.05);
+}
+
+.onlineIndicator {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  bottom: 0;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  height: 14px;
+  position: absolute;
+  right: 0;
+  width: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .header {
+    padding: 0 20px;
+  }
+
+  .leftSection {
+    gap: 8px;
+  }
+
+  .userName {
+    font-size: 0.85rem;
+  }
+
+  .navItem span {
+    display: none;
+  }
+
+  .navItem {
+    padding: 10px;
+  }
+
+  .rightInfo {
+    gap: 16px;
+  }
+
+  .prayerInfo {
+    display: none;
+  }
+
+  .prayerIcon {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    height: 65px;
+    padding: 0 16px;
+  }
+
+  .leftSection {
+    gap: 6px;
+  }
+
+  .userName {
+    font-size: 0.8rem;
+  }
+
+  .logoText {
+    font-size: 1.6rem;
+  }
+
+  .logoSquare {
+    height: 38px;
+    width: 38px;
+  }
+
+  .weatherTemp,
+  .timeText {
+    font-size: 0.9rem;
+  }
+
+  .avatarImage,
+  .avatarInitials {
+    height: 38px;
+    width: 38px;
+  }
+
+  .infoItem {
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .leftSection {
+    gap: 6px;
+  }
+
+  .userName {
+    display: none;
+  }
+
+  .centerNav {
+    gap: 2px;
+  }
+
+  .navItem {
+    padding: 8px;
+  }
+
+  .navItem i {
+    font-size: 1rem;
+  }
+
+  .logoText {
+    font-size: 1.4rem;
+  }
+
+  .logoSquare {
+    height: 32px;
+    width: 32px;
+  }
+
+  .rightInfo {
+    gap: 10px;
+  }
+
+  .weatherTemp,
+  .timeText {
+    font-size: 0.8rem;
+  }
+
+  .prayerIcon {
+    display: none;
+  }
+
+  .infoItem {
+    padding: 5px 8px;
+  }
+}

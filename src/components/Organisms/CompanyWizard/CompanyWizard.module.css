@@ -10,6 +10,8 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  overflow: hidden;
+  padding: 20px;
 }
 
 .modalContent {
@@ -18,9 +20,10 @@
   width: 90%;
   max-width: 900px;
   max-height: 90vh;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .modalHeader {
@@ -29,6 +32,22 @@
   align-items: center;
   padding: 24px 32px;
   border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.titleContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.stepTitle {
+  color: #000000;
+  font-size: 20px;
+  font-weight: normal;
+  white-space: nowrap;
 }
 
 .modalTitle {
@@ -59,19 +78,27 @@
 .progressIndicator {
   display: flex;
   justify-content: space-between;
-  padding: 24px 32px;
+  padding: 20px 24px;
   border-bottom: 1px solid #e0e0e0;
-  overflow-x: auto;
+  overflow-x: visible;
+  gap: 4px;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .stepIndicator {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-width: 100px;
+  justify-content: flex-start;
+  min-width: 0;
   flex: 1;
   cursor: pointer;
   transition: opacity 0.2s;
+  position: relative;
+  padding: 0 4px;
+  flex-shrink: 0;
 }
 
 .stepIndicator:hover {
@@ -91,7 +118,7 @@
   justify-content: center;
   font-weight: 600;
   font-size: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   transition: all 0.3s;
   cursor: pointer;
   flex-shrink: 0;
@@ -118,22 +145,56 @@
 }
 
 .stepLabel {
-  font-size: 12px;
-  color: #666;
+  font-size: 13px;
+  color: #333 !important;
   text-align: center;
   margin: 0;
+  margin-top: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: visible;
+  min-height: 20px;
+  line-height: 1.5;
+  display: block !important;
+  width: 100%;
+  opacity: 1 !important;
+  visibility: visible !important;
+  background-color: transparent !important;
 }
 
 .stepIndicator:first-child .stepCircle.active ~ .stepLabel,
 .stepIndicator .stepCircle.active ~ .stepLabel {
-  color: #ff6b35;
+  color: #ff6b35 !important;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.stepIndicator .stepCircle.completed ~ .stepLabel {
+  color: #4caf50 !important;
   font-weight: 600;
+}
+
+.stepIndicator:hover .stepLabel {
+  color: #ff6b35 !important;
+  font-weight: 600;
+}
+
+.stepContentWrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  -webkit-overflow-scrolling: touch;
 }
 
 .stepContent {
   padding: 32px;
   flex: 1;
-  overflow-y: auto;
+  min-height: min-content;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sectionTitle {
@@ -158,13 +219,46 @@
 
 .formRow {
   display: flex;
-  gap: 20px;
+  flex-wrap: nowrap;
+  gap: 40px;
+  margin-bottom: 24px;
+  align-items: flex-start;
+}
+
+.formRowSingleColumn {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 24px;
+}
+
+.formRowSingleColumn .formField {
+  flex: 1;
+  max-width: 100%;
 }
 
 .formField {
   flex: 1;
   display: flex;
   flex-direction: column;
+}
+
+.formFieldFixedWidth {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dateField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-right: 30px;
+}
+
+.dateField:last-of-type {
+  margin-right: 0;
 }
 
 .label {
@@ -192,6 +286,15 @@
   border-color: #ff6b35;
 }
 
+.selectError {
+  border-color: #dc3545 !important;
+  border-width: 2px;
+}
+
+.selectError:focus {
+  border-color: #dc3545 !important;
+}
+
 .inputField {
   padding: 12px;
   border: 1px solid #ddd;
@@ -204,6 +307,15 @@
 .inputField:focus {
   outline: none;
   border-color: #ff6b35;
+}
+
+.inputError {
+  border-color: #dc3545 !important;
+  border-width: 2px;
+}
+
+.inputError:focus {
+  border-color: #dc3545 !important;
 }
 
 .textarea {
@@ -286,6 +398,8 @@
   align-items: center;
   padding: 24px 32px;
   border-top: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  background: white;
 }
 
 .navigationButtons {
@@ -586,5 +700,108 @@
 
 .deleteButton:hover {
   background-color: #c82333;
+}
+
+.ticketShortCodeContainer {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+}
+
+.ticketPrefix {
+  padding: 12px;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  border-right: 1px solid #ddd;
+  user-select: none;
+  cursor: default;
+}
+
+.ticketShortCodeInput {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+}
+
+.ticketShortCodeInput:focus {
+  outline: none;
+}
+
+.ticketShortCodeContainer:focus-within {
+  border-color: #ff6b35;
+}
+
+.ticketShortCodeContainerError {
+  border-color: #dc3545 !important;
+  border-width: 2px;
+}
+
+.ticketShortCodeContainerError:focus-within {
+  border-color: #dc3545 !important;
+}
+
+.currencyInputContainer {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+  margin-top: 5px;
+}
+
+.currencyPrefix {
+  padding: 12px;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  border-right: 1px solid #ddd;
+  user-select: none;
+  cursor: default;
+}
+
+.currencyInputContainer input {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+}
+
+.currencyInputContainer input:focus {
+  outline: none;
+}
+
+.currencyInputContainer:focus-within {
+  border-color: #ff6b35;
+}
+
+.testDataButton {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease;
+}
+
+.testDataButton:hover {
+  background-color: #45a049;
+}
+
+.testDataButton:active {
+  background-color: #3d8b40;
 }
 

@@ -47,6 +47,7 @@ const ManageServicesModal: FC<ManageServicesModalProps> = ({ company, onClose, o
   useEffect(() => {
     const loadInitialData = async () => {
       setFetching(true);
+
       try {
         await Promise.all([fetchMainServices(), fetchMaintenanceServices()]);
       } finally {
