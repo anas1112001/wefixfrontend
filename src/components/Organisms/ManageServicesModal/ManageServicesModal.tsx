@@ -201,7 +201,8 @@ const ManageServicesModal: FC<ManageServicesModalProps> = ({ company, onClose, o
           `,
           variables: {
             serviceData: {
-              companyId: company.id,
+              itemId: company.id,
+              itemType: 'COMPANY',
               mainServiceId: selectedMain,
               subServiceId: selectedSub,
               isActive: true,

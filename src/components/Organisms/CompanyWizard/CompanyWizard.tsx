@@ -1396,7 +1396,8 @@ interface SubService {
 
       const maintenanceServicePromises = maintenanceServices.map((service) => {
         const serviceData = {
-          companyId: createdCompanyId,
+          itemId: createdCompanyId,
+          itemType: 'COMPANY',
           mainServiceId: service.mainServiceId,
           subServiceId: service.subServiceId,
           isActive: true,

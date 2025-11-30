@@ -10,6 +10,7 @@ import Dashboard from 'pages/Dashboard/Dashboard'
 import Companies from 'pages/Companies/Companies'
 import Individuals from 'pages/Individuals/Individuals'
 import Contracts from 'pages/Contracts/Contracts'
+import Tickets from 'pages/Tickets/Tickets'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -20,6 +21,7 @@ root.render(
         <Route element={<LoginPage />} path="/" />
         <Route element={<LoginPage />} path={appText.links[1]} />
         <Route element={<Dashboard />} path={appText.links[2]} />
+        <Route element={<Tickets />} path="/tickets" />
         <Route element={<Companies />} path={appText.links[5]} />
         <Route element={<Individuals />} path={appText.links[6]} />
         <Route element={<Contracts />} path={appText.links[7]} />
